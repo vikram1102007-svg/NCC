@@ -106,3 +106,29 @@ test("registration RPC explicitly validates the contact name before insert", () 
   const sql = readFileSync(path.join(root, "supabase/migrations/20261124210000_ncc_registration_foundation.sql"), "utf8");
   assert.ok(sql.includes("or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100"));
 });
+
+test("registration validator rejects object and numeric values instead of coercing them to strings", async () => {
+  const { validateRegistrationPayload } = await import("../supabase/functions/_shared/registration-validation.mjs");
+  const valid = {
+    eventSlug: "ncc-event",
+    categoryCode: "individual",
+    idempotencyKey: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    contactName: { toString: () => "Cadet Example" },
+    contactEmail: "cadet@example.org",
+    contactPhone: "+91 98765 43210",
+    institutionName: "Example College",
+    teamName: "",
+    memberNames: []
+  };
+  const nonStringName = validateRegistrationPayload(valid);
+  assert.equal(nonStringName.ok, false);
+  assert.ok(nonStringName.errors.contactName);
+  assert.equal(nonStringName.value.contactName, "");
+
+  valid.contactName = "Cadet Example";
+  valid.memberNames = ["Cadet One", 2, { name: "Cadet Three" }];
+  const nonStringMembers = validateRegistrationPayload(valid);
+  assert.equal(nonStringMembers.ok, false);
+  assert.ok(nonStringMembers.errors.memberNames);
+  assert.deepEqual(nonStringMembers.value.memberNames, ["Cadet One", "", ""]);
+});
