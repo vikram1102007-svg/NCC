@@ -6,7 +6,7 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 
 test("registration validator normalises a valid individual submission", async () => {
-  const { validateRegistrationPayload } = await import("../scripts/registration-validation.mjs");
+  const { validateRegistrationPayload } = await import("../supabase/functions/_shared/registration-validation.mjs");
   const result = validateRegistrationPayload({
     eventSlug: "NCC-2026",
     categoryCode: "DRILL-INDIVIDUAL",
@@ -25,7 +25,7 @@ test("registration validator normalises a valid individual submission", async ()
 });
 
 test("registration validator rejects malformed identifiers and contact fields", async () => {
-  const { validateRegistrationPayload } = await import("../scripts/registration-validation.mjs");
+  const { validateRegistrationPayload } = await import("../supabase/functions/_shared/registration-validation.mjs");
   const result = validateRegistrationPayload({
     eventSlug: "not a slug",
     categoryCode: "bad category",
@@ -43,7 +43,7 @@ test("registration validator rejects malformed identifiers and contact fields", 
 });
 
 test("registration validator bounds team member input", async () => {
-  const { validateRegistrationPayload } = await import("../scripts/registration-validation.mjs");
+  const { validateRegistrationPayload } = await import("../supabase/functions/_shared/registration-validation.mjs");
   const base = {
     eventSlug: "ncc-event",
     categoryCode: "team-drill",
