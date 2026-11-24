@@ -3,5 +3,6 @@ window.NCC_CONFIG = Object.freeze({
   supabaseUrl: "",
   publishableKey: "",
   eventSlug: "",
+  privacyNoticeApproved: false,
   registrationEnabled: false
 });
