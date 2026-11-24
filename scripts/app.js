@@ -55,8 +55,20 @@ function initialiseRegistration() {
     return;
   }
 
-  if (!config.supabaseUrl || !config.publishableKey || !config.eventSlug || config.privacyNoticeApproved !== true) {
-    setStatus("Registration setup is incomplete. The organiser must approve the privacy notice and the public database configuration before registration can open.", "warning");
+  if (!config.supabaseUrl || !config.publishableKey || !config.eventSlug || config.privacyNoticeApproved !== true || !config.privacyNoticeUrl) {
+    setStatus("Registration setup is incomplete. The organiser must approve and publish the privacy notice and configure the public database before registration can open.", "warning");
+    return;
+  }
+
+  let privacyUrl;
+  try {
+    privacyUrl = new URL(config.privacyNoticeUrl);
+    if (privacyUrl.protocol !== "https:") throw new Error("Privacy notice must use HTTPS.");
+    const privacyLink = document.querySelector("#privacy-notice-link");
+    privacyLink.href = privacyUrl.href;
+    privacyLink.hidden = false;
+  } catch {
+    setStatus("The approved privacy notice URL is invalid. Please contact the event organiser.", "error");
     return;
   }
 
