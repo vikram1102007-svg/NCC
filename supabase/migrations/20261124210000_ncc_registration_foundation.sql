@@ -233,9 +233,327 @@ declare
   v_members text[] := coalesce(p_member_names, array[]::text[]);
 begin
   if p_idempotency_key is null
-     or p_request_hash !~ '^[a-f0-9]{64}$'
-     or p_event_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$'
-     or p_category_code !~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+     or p_request_hash is null
+     or p_event_slug is null
+     or p_category_code is null
+     or p_request_hash !~ '^[a-f0-9]{64}
+     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
+     or lower(trim(coalesce(p_contact_email, ''))) !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+     or char_length(trim(coalesce(p_contact_email, ''))) > 254
+     or trim(coalesce(p_contact_phone, '')) !~ '^\+?[0-9][0-9 ()-]{6,18}[0-9]$'
+     or char_length(trim(coalesce(p_institution_name, ''))) not between 2 and 160
+     or cardinality(v_members) > 25
+     or exists (select 1 from unnest(v_members) member_name where member_name is null or char_length(trim(member_name)) not between 2 and 100) then
+    raise exception 'Registration details are invalid' using errcode = '22023';
+  end if;
+
+  -- Serialise retries that reuse the same idempotency key before checking for an existing row.
+  perform pg_advisory_xact_lock(hashtextextended(p_idempotency_key::text, 0));
+
+  select * into v_existing
+  from public.registrations r
+  where r.idempotency_key = p_idempotency_key;
+
+  if found then
+    if v_existing.request_hash <> p_request_hash then
+      raise exception 'Idempotency key was reused with different details' using errcode = '22023';
+    end if;
+    return query select v_existing.id, v_existing.registration_ref, v_existing.status, false;
+    return;
+  end if;
+
+  -- Serialise registrations for this event so event/category capacity cannot be oversubscribed.
+  select * into v_event
+  from public.events e
+  where e.slug = p_event_slug
+    and e.is_published = true
+    and e.registration_open = true
+  for update;
+
+  if not found then
+    raise exception 'Registration is closed or event is unavailable' using errcode = 'P0001';
+  end if;
+
+  if (v_event.registration_starts_at is not null and now() < v_event.registration_starts_at)
+     or (v_event.registration_ends_at is not null and now() > v_event.registration_ends_at) then
+    raise exception 'Registration is outside the allowed window' using errcode = 'P0001';
+  end if;
+
+  select * into v_category
+  from public.event_categories c
+  where c.event_id = v_event.id
+    and c.code = p_category_code
+    and c.is_active = true;
+
+  if not found then
+    raise exception 'Selected category is unavailable' using errcode = '22023';
+  end if;
+
+  if v_category.registration_mode = 'individual' then
+    if cardinality(v_members) <> 0 or nullif(trim(coalesce(p_team_name, '')), '') is not null then
+      raise exception 'Individual registration cannot include team details' using errcode = '22023';
+    end if;
+  else
+    if char_length(trim(coalesce(p_team_name, ''))) not between 2 and 100
+       or cardinality(v_members) < v_category.min_team_size
+       or cardinality(v_members) > v_category.max_team_size then
+      raise exception 'Team name or team size is invalid for this category' using errcode = '22023';
+    end if;
+  end if;
+
+  select count(*) into v_count
+  from public.registrations r
+  where r.event_id = v_event.id and r.status <> 'cancelled';
+
+  if v_event.capacity is not null and v_count >= v_event.capacity then
+    raise exception 'Event capacity has been reached' using errcode = 'P0001';
+  end if;
+
+  select count(*) into v_count
+  from public.registrations r
+  where r.event_id = v_event.id
+    and r.category_id = v_category.id
+    and r.status <> 'cancelled';
+
+  if v_category.capacity is not null and v_count >= v_category.capacity then
+    raise exception 'Category capacity has been reached' using errcode = 'P0001';
+  end if;
+
+  v_ref := 'NCC-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10));
+
+  insert into public.registrations (
+    event_id, category_id, registration_ref, idempotency_key, request_hash,
+    contact_name, contact_email, contact_phone, institution_name, team_name, member_names
+  )
+  values (
+    v_event.id, v_category.id, v_ref, p_idempotency_key, p_request_hash,
+    trim(p_contact_name), lower(trim(p_contact_email)), trim(p_contact_phone),
+    trim(p_institution_name), nullif(trim(coalesce(p_team_name, '')), ''), v_members
+  )
+  returning id, registration_ref, status
+  into registration_id, registration_ref, registration_status;
+
+  created := true;
+  return next;
+end;
+$$;
+
+-- SECURITY DEFINER functions are not public APIs. Only the server-side secret role may execute them.
+revoke all on function public.consume_registration_rate_limit(text, integer, integer) from public, anon, authenticated;
+revoke all on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) from public, anon, authenticated;
+grant execute on function public.consume_registration_rate_limit(text, integer, integer) to service_role;
+grant execute on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) to service_role;
+
+     or p_event_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*
+     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
+     or lower(trim(coalesce(p_contact_email, ''))) !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+     or char_length(trim(coalesce(p_contact_email, ''))) > 254
+     or trim(coalesce(p_contact_phone, '')) !~ '^\+?[0-9][0-9 ()-]{6,18}[0-9]$'
+     or char_length(trim(coalesce(p_institution_name, ''))) not between 2 and 160
+     or cardinality(v_members) > 25
+     or exists (select 1 from unnest(v_members) member_name where char_length(trim(member_name)) not between 2 and 100) then
+    raise exception 'Registration details are invalid' using errcode = '22023';
+  end if;
+
+  select * into v_existing
+  from public.registrations r
+  where r.idempotency_key = p_idempotency_key;
+
+  if found then
+    if v_existing.request_hash <> p_request_hash then
+      raise exception 'Idempotency key was reused with different details' using errcode = '22023';
+    end if;
+    return query select v_existing.id, v_existing.registration_ref, v_existing.status, false;
+    return;
+  end if;
+
+  -- Serialise registrations for this event so event/category capacity cannot be oversubscribed.
+  select * into v_event
+  from public.events e
+  where e.slug = p_event_slug
+    and e.is_published = true
+    and e.registration_open = true
+  for update;
+
+  if not found then
+    raise exception 'Registration is closed or event is unavailable' using errcode = 'P0001';
+  end if;
+
+  if (v_event.registration_starts_at is not null and now() < v_event.registration_starts_at)
+     or (v_event.registration_ends_at is not null and now() > v_event.registration_ends_at) then
+    raise exception 'Registration is outside the allowed window' using errcode = 'P0001';
+  end if;
+
+  select * into v_category
+  from public.event_categories c
+  where c.event_id = v_event.id
+    and c.code = p_category_code
+    and c.is_active = true;
+
+  if not found then
+    raise exception 'Selected category is unavailable' using errcode = '22023';
+  end if;
+
+  if v_category.registration_mode = 'individual' then
+    if cardinality(v_members) <> 0 or nullif(trim(coalesce(p_team_name, '')), '') is not null then
+      raise exception 'Individual registration cannot include team details' using errcode = '22023';
+    end if;
+  else
+    if char_length(trim(coalesce(p_team_name, ''))) not between 2 and 100
+       or cardinality(v_members) < v_category.min_team_size
+       or cardinality(v_members) > v_category.max_team_size then
+      raise exception 'Team name or team size is invalid for this category' using errcode = '22023';
+    end if;
+  end if;
+
+  select count(*) into v_count
+  from public.registrations r
+  where r.event_id = v_event.id and r.status <> 'cancelled';
+
+  if v_event.capacity is not null and v_count >= v_event.capacity then
+    raise exception 'Event capacity has been reached' using errcode = 'P0001';
+  end if;
+
+  select count(*) into v_count
+  from public.registrations r
+  where r.event_id = v_event.id
+    and r.category_id = v_category.id
+    and r.status <> 'cancelled';
+
+  if v_category.capacity is not null and v_count >= v_category.capacity then
+    raise exception 'Category capacity has been reached' using errcode = 'P0001';
+  end if;
+
+  v_ref := 'NCC-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10));
+
+  insert into public.registrations (
+    event_id, category_id, registration_ref, idempotency_key, request_hash,
+    contact_name, contact_email, contact_phone, institution_name, team_name, member_names
+  )
+  values (
+    v_event.id, v_category.id, v_ref, p_idempotency_key, p_request_hash,
+    trim(p_contact_name), lower(trim(p_contact_email)), trim(p_contact_phone),
+    trim(p_institution_name), nullif(trim(coalesce(p_team_name, '')), ''), v_members
+  )
+  returning id, registration_ref, status
+  into registration_id, registration_ref, registration_status;
+
+  created := true;
+  return next;
+end;
+$$;
+
+-- SECURITY DEFINER functions are not public APIs. Only the server-side secret role may execute them.
+revoke all on function public.consume_registration_rate_limit(text, integer, integer) from public, anon, authenticated;
+revoke all on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) from public, anon, authenticated;
+grant execute on function public.consume_registration_rate_limit(text, integer, integer) to service_role;
+grant execute on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) to service_role;
+
+     or p_category_code !~ '^[a-z0-9]+(-[a-z0-9]+)*
+     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
+     or lower(trim(coalesce(p_contact_email, ''))) !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+     or char_length(trim(coalesce(p_contact_email, ''))) > 254
+     or trim(coalesce(p_contact_phone, '')) !~ '^\+?[0-9][0-9 ()-]{6,18}[0-9]$'
+     or char_length(trim(coalesce(p_institution_name, ''))) not between 2 and 160
+     or cardinality(v_members) > 25
+     or exists (select 1 from unnest(v_members) member_name where char_length(trim(member_name)) not between 2 and 100) then
+    raise exception 'Registration details are invalid' using errcode = '22023';
+  end if;
+
+  select * into v_existing
+  from public.registrations r
+  where r.idempotency_key = p_idempotency_key;
+
+  if found then
+    if v_existing.request_hash <> p_request_hash then
+      raise exception 'Idempotency key was reused with different details' using errcode = '22023';
+    end if;
+    return query select v_existing.id, v_existing.registration_ref, v_existing.status, false;
+    return;
+  end if;
+
+  -- Serialise registrations for this event so event/category capacity cannot be oversubscribed.
+  select * into v_event
+  from public.events e
+  where e.slug = p_event_slug
+    and e.is_published = true
+    and e.registration_open = true
+  for update;
+
+  if not found then
+    raise exception 'Registration is closed or event is unavailable' using errcode = 'P0001';
+  end if;
+
+  if (v_event.registration_starts_at is not null and now() < v_event.registration_starts_at)
+     or (v_event.registration_ends_at is not null and now() > v_event.registration_ends_at) then
+    raise exception 'Registration is outside the allowed window' using errcode = 'P0001';
+  end if;
+
+  select * into v_category
+  from public.event_categories c
+  where c.event_id = v_event.id
+    and c.code = p_category_code
+    and c.is_active = true;
+
+  if not found then
+    raise exception 'Selected category is unavailable' using errcode = '22023';
+  end if;
+
+  if v_category.registration_mode = 'individual' then
+    if cardinality(v_members) <> 0 or nullif(trim(coalesce(p_team_name, '')), '') is not null then
+      raise exception 'Individual registration cannot include team details' using errcode = '22023';
+    end if;
+  else
+    if char_length(trim(coalesce(p_team_name, ''))) not between 2 and 100
+       or cardinality(v_members) < v_category.min_team_size
+       or cardinality(v_members) > v_category.max_team_size then
+      raise exception 'Team name or team size is invalid for this category' using errcode = '22023';
+    end if;
+  end if;
+
+  select count(*) into v_count
+  from public.registrations r
+  where r.event_id = v_event.id and r.status <> 'cancelled';
+
+  if v_event.capacity is not null and v_count >= v_event.capacity then
+    raise exception 'Event capacity has been reached' using errcode = 'P0001';
+  end if;
+
+  select count(*) into v_count
+  from public.registrations r
+  where r.event_id = v_event.id
+    and r.category_id = v_category.id
+    and r.status <> 'cancelled';
+
+  if v_category.capacity is not null and v_count >= v_category.capacity then
+    raise exception 'Category capacity has been reached' using errcode = 'P0001';
+  end if;
+
+  v_ref := 'NCC-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10));
+
+  insert into public.registrations (
+    event_id, category_id, registration_ref, idempotency_key, request_hash,
+    contact_name, contact_email, contact_phone, institution_name, team_name, member_names
+  )
+  values (
+    v_event.id, v_category.id, v_ref, p_idempotency_key, p_request_hash,
+    trim(p_contact_name), lower(trim(p_contact_email)), trim(p_contact_phone),
+    trim(p_institution_name), nullif(trim(coalesce(p_team_name, '')), ''), v_members
+  )
+  returning id, registration_ref, status
+  into registration_id, registration_ref, registration_status;
+
+  created := true;
+  return next;
+end;
+$$;
+
+-- SECURITY DEFINER functions are not public APIs. Only the server-side secret role may execute them.
+revoke all on function public.consume_registration_rate_limit(text, integer, integer) from public, anon, authenticated;
+revoke all on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) from public, anon, authenticated;
+grant execute on function public.consume_registration_rate_limit(text, integer, integer) to service_role;
+grant execute on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) to service_role;
+
      or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
      or lower(trim(coalesce(p_contact_email, ''))) !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
      or char_length(trim(coalesce(p_contact_email, ''))) > 254
