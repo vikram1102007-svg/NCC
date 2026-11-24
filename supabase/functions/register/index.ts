@@ -2,7 +2,7 @@ import { withSupabase } from "npm:@supabase/server";
 import {
   normalizeRegistrationPayload,
   validateRegistrationPayload
-} from "../../../scripts/registration-validation.mjs";
+} from "../_shared/registration-validation.mjs";
 
 const DEFAULT_ORIGINS = [
   "https://ncc-event-management.embarko.app",
