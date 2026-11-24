@@ -11,7 +11,8 @@ A dedicated project for the college's two-day NCC event. This repository is the 
 - The branch adds a responsive registration form, but it is disabled by default and does not collect participant data until organiser approval and backend configuration.
 - Supabase migration and public registration Edge Function source are prepared. They have **not** been applied or deployed.
 
-- A follow-up review repaired malformed SQL guards and removed duplicated fragments from the registration migration; regression assertions were added. The latest commits still need a fresh CI result before the branch can be considered verified.
+- Registration request handling now rejects non-object JSON before reading fields; the shared validator safely handles null, arrays and primitive payloads. The database RPC explicitly validates the contact name, and the migration has a single registration function with complete slug/category/hash guards.
+- GitHub Actions run #21 passed for commit `d88f5b22c131bd32f04a62f91d80cbf5ff4f9c4a`: `npm run check`, 14 tests passed, 0 failed. This is Node.js syntax/unit/smoke coverage only; it does not verify Supabase execution or deployment.
 - The connected Supabase account currently has no projects. A dedicated project was quoted at $0/month in the selected organisation, but project creation has not been performed pending the user's explicit confirmation.
 - Admin login/dashboard, participant management, QR passes, check-in, exports and payment workflows are not yet implemented.
 - No real participant data, payment keys or secrets are stored.
