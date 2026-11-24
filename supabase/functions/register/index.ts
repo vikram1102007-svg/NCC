@@ -101,24 +101,29 @@ export default {
       return jsonResponse({ error: "invalid_request" }, 400, headers);
     }
 
-    let body: Record<string, unknown>;
+    let body: unknown;
     try {
       body = JSON.parse(rawBody);
     } catch {
       return jsonResponse({ error: "invalid_json" }, 400, headers);
     }
 
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return jsonResponse({ error: "invalid_request" }, 400, headers);
+    }
+    const payload = body as Record<string, unknown>;
+
     // Honeypot field: bots should not receive a useful error detail.
-    if (String(body.website ?? "").trim() !== "") {
+    if (String(payload.website ?? "").trim() !== "") {
       return jsonResponse({ error: "request_rejected" }, 400, headers);
     }
 
-    const validation = validateRegistrationPayload(body);
+    const validation = validateRegistrationPayload(payload);
     if (!validation.ok) {
       return jsonResponse({ error: "validation_failed", fields: validation.errors }, 422, headers);
     }
 
-    const value = normalizeRegistrationPayload(body);
+    const value = normalizeRegistrationPayload(payload);
     const clientIp = getClientIp(req);
     if (!clientIp) {
       return jsonResponse({ error: "rate_limit_context_unavailable" }, 503, headers);
