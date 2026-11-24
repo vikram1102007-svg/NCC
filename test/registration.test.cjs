@@ -38,7 +38,7 @@ test("registration validator rejects malformed identifiers and contact fields", 
   });
   assert.equal(result.ok, false);
   for (const field of ["eventSlug", "categoryCode", "idempotencyKey", "contactName", "contactEmail", "contactPhone", "institutionName"]) {
-    assert.ok(result.errors[field], `expected validation error for ${field}`);
+    assert.ok(result.errors[field], \`expected validation error for \${field}\`);
   }
 });
 
@@ -53,7 +53,7 @@ test("registration validator bounds team member input", async () => {
     contactPhone: "+91 98765 43210",
     institutionName: "Example College",
     teamName: "Bravo",
-    memberNames: Array.from({ length: 26 }, (_, index) => `Cadet ${index + 1}`)
+    memberNames: Array.from({ length: 26 }, (_, index) => \`Cadet \${index + 1}\`)
   };
   const result = validateRegistrationPayload(base);
   assert.equal(result.ok, false);
@@ -62,10 +62,10 @@ test("registration validator bounds team member input", async () => {
 
 test("registration migration enables RLS and limits privileged RPC execution", () => {
   const sql = readFileSync(path.join(root, "supabase/migrations/20261124210000_ncc_registration_foundation.sql"), "utf8");
-  assert.match(sql, /alter table public\\.registrations enable row level security/i);
+  assert.match(sql, /alter table public\.registrations enable row level security/i);
   assert.match(sql, /create policy "published events are public"/i);
-  assert.match(sql, /revoke all on function public\\.create_public_registration[\\s\\S]*from public, anon, authenticated/i);
-  assert.match(sql, /grant execute on function public\\.create_public_registration[\\s\\S]*to service_role/i);
+  assert.match(sql, /revoke all on function public\.create_public_registration[\s\S]*from public, anon, authenticated/i);
+  assert.match(sql, /grant execute on function public\.create_public_registration[\s\S]*to service_role/i);
   assert.match(sql, /for update;/i);
   assert.match(sql, /unique index if not exists registrations_event_category_email_key/i);
 });
