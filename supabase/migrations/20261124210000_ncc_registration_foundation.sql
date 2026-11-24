@@ -236,8 +236,7 @@ begin
      or p_request_hash is null
      or p_event_slug is null
      or p_category_code is null
-     or p_request_hash !~ '^[a-f0-9]{64}
-     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
+     or p_event_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
      or lower(trim(coalesce(p_contact_email, ''))) !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
      or char_length(trim(coalesce(p_contact_email, ''))) > 254
      or trim(coalesce(p_contact_phone, '')) !~ '^\+?[0-9][0-9 ()-]{6,18}[0-9]$'
@@ -344,16 +343,18 @@ revoke all on function public.create_public_registration(text, text, uuid, text,
 grant execute on function public.consume_registration_rate_limit(text, integer, integer) to service_role;
 grant execute on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) to service_role;
 
-     or p_event_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*
-     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
+     or p_category_code !~ '^[a-z0-9]+(-[a-z0-9]+)*     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
      or lower(trim(coalesce(p_contact_email, ''))) !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
      or char_length(trim(coalesce(p_contact_email, ''))) > 254
      or trim(coalesce(p_contact_phone, '')) !~ '^\+?[0-9][0-9 ()-]{6,18}[0-9]$'
      or char_length(trim(coalesce(p_institution_name, ''))) not between 2 and 160
      or cardinality(v_members) > 25
-     or exists (select 1 from unnest(v_members) member_name where char_length(trim(member_name)) not between 2 and 100) then
+     or exists (select 1 from unnest(v_members) member_name where member_name is null or char_length(trim(member_name)) not between 2 and 100) then
     raise exception 'Registration details are invalid' using errcode = '22023';
   end if;
+
+  -- Serialise retries that reuse the same idempotency key before checking for an existing row.
+  perform pg_advisory_xact_lock(hashtextextended(p_idempotency_key::text, 0));
 
   select * into v_existing
   from public.registrations r
@@ -449,16 +450,18 @@ revoke all on function public.create_public_registration(text, text, uuid, text,
 grant execute on function public.consume_registration_rate_limit(text, integer, integer) to service_role;
 grant execute on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) to service_role;
 
-     or p_category_code !~ '^[a-z0-9]+(-[a-z0-9]+)*
-     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
+     or p_request_hash !~ '^[a-f0-9]{64}     or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100
      or lower(trim(coalesce(p_contact_email, ''))) !~ '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
      or char_length(trim(coalesce(p_contact_email, ''))) > 254
      or trim(coalesce(p_contact_phone, '')) !~ '^\+?[0-9][0-9 ()-]{6,18}[0-9]$'
      or char_length(trim(coalesce(p_institution_name, ''))) not between 2 and 160
      or cardinality(v_members) > 25
-     or exists (select 1 from unnest(v_members) member_name where char_length(trim(member_name)) not between 2 and 100) then
+     or exists (select 1 from unnest(v_members) member_name where member_name is null or char_length(trim(member_name)) not between 2 and 100) then
     raise exception 'Registration details are invalid' using errcode = '22023';
   end if;
+
+  -- Serialise retries that reuse the same idempotency key before checking for an existing row.
+  perform pg_advisory_xact_lock(hashtextextended(p_idempotency_key::text, 0));
 
   select * into v_existing
   from public.registrations r
@@ -560,9 +563,12 @@ grant execute on function public.create_public_registration(text, text, uuid, te
      or trim(coalesce(p_contact_phone, '')) !~ '^\+?[0-9][0-9 ()-]{6,18}[0-9]$'
      or char_length(trim(coalesce(p_institution_name, ''))) not between 2 and 160
      or cardinality(v_members) > 25
-     or exists (select 1 from unnest(v_members) member_name where char_length(trim(member_name)) not between 2 and 100) then
+     or exists (select 1 from unnest(v_members) member_name where member_name is null or char_length(trim(member_name)) not between 2 and 100) then
     raise exception 'Registration details are invalid' using errcode = '22023';
   end if;
+
+  -- Serialise retries that reuse the same idempotency key before checking for an existing row.
+  perform pg_advisory_xact_lock(hashtextextended(p_idempotency_key::text, 0));
 
   select * into v_existing
   from public.registrations r
