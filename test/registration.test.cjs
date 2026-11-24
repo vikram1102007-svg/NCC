@@ -71,12 +71,12 @@ test("registration migration enables RLS and limits privileged RPC execution", (
   assert.match(sql, /unique index if not exists registrations_event_category_email_key/i);
 });
 
-test("registration migration has complete slug/hash guards and no duplicated SQL fragments", () => {
+test("registration migration has complete guards and no duplicated SQL fragments", () => {
   const sql = readFileSync(path.join(root, "supabase/migrations/20261124210000_ncc_registration_foundation.sql"), "utf8");
-  assert.match(sql, /p_event_slug !~ '\^\[a-z0-9\]\+\(-\[a-z0-9\]\+\)\*\$'/);
-  assert.match(sql, /p_category_code !~ '\^\[a-z0-9\]\+\(-\[a-z0-9\]\+\)\*\$'/);
-  assert.match(sql, /p_request_hash !~ '\^\[a-f0-9\]\{64\}\$'/);
-  assert.equal((sql.match(/create or replace function public\\.create_public_registration/g) || []).length, 1);
-  assert.doesNotMatch(sql, /\\n\\s+or p_event_slug !~ '\^\[a-z0-9\]\+\(-\[a-z0-9\]\+\)\*\\n/);
-  assert.match(sql.trimEnd(), /grant execute on function public\\.create_public_registration\\([^;]+ to service_role;$/);
+  assert.ok(sql.includes("or p_event_slug !~ '^[a-z0-9]+(-[a-z0-9]+)*$'"));
+  assert.ok(sql.includes("or p_category_code !~ '^[a-z0-9]+(-[a-z0-9]+)*$'"));
+  assert.ok(sql.includes("or p_request_hash !~ '^[a-f0-9]{64}$'"));
+  assert.equal(sql.split("create or replace function public.create_public_registration").length - 1, 1);
+  assert.equal(sql.split("grant execute on function public.create_public_registration").length - 1, 1);
+  assert.ok(sql.trimEnd().endsWith("grant execute on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) to service_role;"));
 });
