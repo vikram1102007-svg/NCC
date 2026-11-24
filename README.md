@@ -47,7 +47,7 @@ The registration form stays disabled unless all of the following are true:
 - A dedicated NCC Supabase project is created and the migration is applied.
 - Approved event/category rows are published and registration is open.
 - The registration Edge Function is deployed and its server-only secrets are configured.
-- `scripts/config.js` contains the public project URL, publishable key, approved event slug, and explicit approval flags.
+- `scripts/config.js` contains the public project URL, publishable key, approved event slug, and explicit approval flags plus an HTTPS privacy notice URL.
 
 See [Registration setup](docs/REGISTRATION_SETUP.md). Never put a secret/service-role key in browser code.
 
