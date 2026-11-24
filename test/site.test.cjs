@@ -41,12 +41,16 @@ test("two-day agenda and activity categories are explicitly represented", () => 
   assert.match(html, /subject to required institutional, range and safety approvals/i);
 });
 
-test("registration stays closed in the static preview", () => {
-  assert.match(html, /Registration is not open yet/i);
-  assert.match(html, /<button\b[^>]*\bdisabled\b/i);
-  assert.doesNotMatch(html, /<form\b/i);
-  assert.doesNotMatch(html, /<input\b/i);
-  assert.match(html, /No participant details or payments are collected/i);
+test("registration UI is present but disabled until approved configuration", () => {
+  const config = fs.readFileSync(path.join(root, "scripts/config.js"), "utf8");
+  assert.match(html, /<form id="registration-form"/i);
+  assert.match(html, /<fieldset id="registration-fields" disabled/i);
+  assert.match(html, /id="registration-status"/i);
+  assert.match(config, /registrationEnabled: false/);
+  assert.match(config, /privacyNoticeApproved: false/);
+  assert.doesNotMatch(config, /service_role|sb_secret_/i);
+  assert.match(appSource, /functions\\/v1\\/register/);
+  assert.match(html, /No payment is requested on this page/i);
 });
 
 test("FAQ disclosures and accessibility hooks exist", () => {
