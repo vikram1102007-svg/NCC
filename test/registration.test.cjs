@@ -80,3 +80,29 @@ test("registration migration has complete guards and no duplicated SQL fragments
   assert.equal(sql.split("grant execute on function public.create_public_registration").length - 1, 1);
   assert.ok(sql.trimEnd().endsWith("grant execute on function public.create_public_registration(text, text, uuid, text, text, text, text, text, text, text[]) to service_role;"));
 });
+
+
+test("registration validator safely rejects non-object JSON bodies", async () => {
+  const { validateRegistrationPayload, normalizeRegistrationPayload } = await import("../supabase/functions/_shared/registration-validation.mjs");
+  for (const input of [null, [], "not-an-object", 42]) {
+    const result = validateRegistrationPayload(input);
+    assert.equal(result.ok, false);
+    assert.ok(result.errors.payload);
+    assert.equal(result.value.contactName, "");
+  }
+  assert.equal(normalizeRegistrationPayload(null).eventSlug, "");
+});
+
+test("registration endpoint rejects non-object JSON before reading honeypot fields", () => {
+  const source = readFileSync(path.join(root, "supabase/functions/register/index.ts"), "utf8");
+  const shapeGuard = source.indexOf('body === null || typeof body !== "object" || Array.isArray(body)');
+  const honeypotRead = source.indexOf('payload.website');
+  assert.ok(shapeGuard >= 0);
+  assert.ok(honeypotRead > shapeGuard);
+  assert.match(source, /return jsonResponse\(\{ error: "invalid_request" \}, 400, headers\)/);
+});
+
+test("registration RPC explicitly validates the contact name before insert", () => {
+  const sql = readFileSync(path.join(root, "supabase/migrations/20261124210000_ncc_registration_foundation.sql"), "utf8");
+  assert.ok(sql.includes("or char_length(trim(coalesce(p_contact_name, ''))) not between 2 and 100"));
+});
