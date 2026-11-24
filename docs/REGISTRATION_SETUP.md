@@ -26,7 +26,7 @@ Do not add date of birth, home address, identity numbers, medical details, paren
    - `NCC_REGISTRATION_ENABLED=false` initially
    - `NCC_RATE_LIMIT_SECRET` to a random secret of at least 32 characters
    - `NCC_ALLOWED_ORIGINS` to a comma-separated list of approved origins; include the Embarko URL only after deployment
-7. Add only the Supabase project URL, publishable key, approved event slug and registration toggle to `scripts/config.js`. The publishable key is intended for browser use; never put a secret/service-role key in this file.
+7. Add only the Supabase project URL, publishable key, approved event slug, registration toggle and privacy-notice approval/HTTPS URL to `scripts/config.js`. The publishable key is intended for browser use; never put a secret/service-role key in this file.
 8. Set `privacyNoticeApproved=true` and provide an HTTPS `privacyNoticeUrl` only after the organiser approves and publishes the notice.
 9. Keep both the server-side `NCC_REGISTRATION_ENABLED` flag and database event `registration_open` false until the organiser approves the event facts, fields, privacy notice, capacity and registration dates.
 
