@@ -26,7 +26,7 @@ Requirements: Node.js 20 or later.
 
 GitHub Actions runs `npm run check` on pushes to `main`, pull requests targeting `main`, and manual workflow dispatch. The workflow uses read-only repository permissions.
 
-Latest verified run: [run #21](https://github.com/vikram1102007-svg/NCC/actions/runs/45460638119) on 2026-11-24, commit `d88f5b22c131bd32f04a62f91d80cbf5ff4f9c4a` — 14 tests passed, 0 failed.
+Latest verified run: [run #23](https://github.com/vikram1102007-svg/NCC/actions/runs/45460829441) on 2026-11-24, commit `cd7b0befff097d71f1b5fd8c76e73ee45bb928fa` — 14 tests passed, 0 failed. Run #21 also passed on the application-code commit before the documentation-only follow-up.
 
 ## Not yet verified
 
