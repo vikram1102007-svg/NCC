@@ -49,7 +49,7 @@ test("registration UI is present but disabled until approved configuration", () 
   assert.match(config, /registrationEnabled: false/);
   assert.match(config, /privacyNoticeApproved: false/);
   assert.doesNotMatch(config, /service_role|sb_secret_/i);
-  assert.match(appSource, /functions\\/v1\\/register/);
+  assert.ok(appSource.includes("/functions/v1/register"));
   assert.match(html, /No payment is requested on this page/i);
 });
 
