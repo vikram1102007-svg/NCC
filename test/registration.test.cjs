@@ -66,6 +66,7 @@ test("registration migration enables RLS and limits privileged RPC execution", (
   assert.match(sql, /create policy "published events are public"/i);
   assert.match(sql, /revoke all on function public\.create_public_registration[\s\S]*from public, anon, authenticated/i);
   assert.match(sql, /grant execute on function public\.create_public_registration[\s\S]*to service_role/i);
+  assert.match(sql, /set search_path = pg_catalog, public, pg_temp/i);
   assert.match(sql, /for update;/i);
   assert.match(sql, /unique index if not exists registrations_event_category_email_key/i);
 });
