@@ -4,5 +4,6 @@ window.NCC_CONFIG = Object.freeze({
   publishableKey: "",
   eventSlug: "",
   privacyNoticeApproved: false,
+  privacyNoticeUrl: "",
   registrationEnabled: false
 });
