@@ -38,7 +38,7 @@ test("registration validator rejects malformed identifiers and contact fields", 
   });
   assert.equal(result.ok, false);
   for (const field of ["eventSlug", "categoryCode", "idempotencyKey", "contactName", "contactEmail", "contactPhone", "institutionName"]) {
-    assert.ok(result.errors[field], \`expected validation error for \${field}\`);
+    assert.ok(result.errors[field], "expected validation error for " + field);
   }
 });
 
@@ -53,7 +53,7 @@ test("registration validator bounds team member input", async () => {
     contactPhone: "+91 98765 43210",
     institutionName: "Example College",
     teamName: "Bravo",
-    memberNames: Array.from({ length: 26 }, (_, index) => \`Cadet \${index + 1}\`)
+    memberNames: Array.from({ length: 26 }, (_, index) => "Cadet " + (index + 1))
   };
   const result = validateRegistrationPayload(base);
   assert.equal(result.ok, false);
