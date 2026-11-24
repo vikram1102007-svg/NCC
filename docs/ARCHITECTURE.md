@@ -21,5 +21,10 @@ The first milestone is a static, mobile-first public information site using plai
 - Do not expose attendee lists, payment records or contact details publicly.
 - Use synthetic test data in development and CI.
 
+## Verification
+- Local: `npm test` or `npm run check` (Node.js 20+).
+- CI: GitHub Actions runs the static smoke suite on pushes and pull requests.
+- Current checks cover the static shell and mobile navigation only. They are not security, backend, browser, accessibility-audit or payment tests.
+
 ## Future environment variables
 Document exact variable names and safe setup instructions when backend integration is introduced. Never include real values in repository documentation or commits.
