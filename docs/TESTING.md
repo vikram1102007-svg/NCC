@@ -18,11 +18,15 @@ Requirements: Node.js 20 or later.
 - Registration payload normalisation and valid individual request shape.
 - Invalid event/category slugs, idempotency key, contact fields and institution fields are rejected.
 - Team member list length is bounded.
-- Migration source includes RLS, published-event policy, restricted SECURITY DEFINER RPC grants, event locking and duplicate-registration uniqueness.
+- Null, array and primitive JSON payloads are rejected safely; the endpoint checks object shape before reading the honeypot field.
+- Registration RPC source explicitly validates the contact name.
+- Migration source includes RLS, published-event policy, restricted SECURITY DEFINER RPC grants, event locking, complete event/category/hash guards and duplicate-registration uniqueness.
 
 ## CI
 
 GitHub Actions runs `npm run check` on pushes to `main`, pull requests targeting `main`, and manual workflow dispatch. The workflow uses read-only repository permissions.
+
+Latest verified run: [run #21](https://github.com/vikram1102007-svg/NCC/actions/runs/45460638119) on 2026-11-24, commit `d88f5b22c131bd32f04a62f91d80cbf5ff4f9c4a` — 14 tests passed, 0 failed.
 
 ## Not yet verified
 
