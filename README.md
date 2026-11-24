@@ -5,6 +5,9 @@ A dedicated project for the college's two-day NCC event. This repository is the 
 > Event name, college/unit details, dates, venue, fees, eligibility, permissions, contacts and official branding are placeholders until supplied and approved. This starter does not accept registrations or payments.
 
 ## Current status
+
+- Public preview deployed to Embarko: https://ncc-event-management.embarko.app (deployment version 1.0.0; Embarko reported status `success`).
+- This is a static information preview only; registration, admin, QR, attendance, database and payments are not implemented.
 - Public mobile-first event information website: initial static milestone.
 - Automated Node.js smoke tests and GitHub Actions CI: added.
 - Registration, admin portal, QR passes, attendance, database and payment gateway: planned, not connected.
