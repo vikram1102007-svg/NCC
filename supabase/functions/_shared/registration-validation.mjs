@@ -7,19 +7,23 @@ function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function cleanString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export function normalizeRegistrationPayload(input = {}) {
   const source = isPlainObject(input) ? input : {};
   return {
-    eventSlug: String(source.eventSlug ?? "").trim().toLowerCase(),
-    categoryCode: String(source.categoryCode ?? "").trim().toLowerCase(),
-    idempotencyKey: String(source.idempotencyKey ?? "").trim(),
-    contactName: String(source.contactName ?? "").trim(),
-    contactEmail: String(source.contactEmail ?? "").trim().toLowerCase(),
-    contactPhone: String(source.contactPhone ?? "").trim(),
-    institutionName: String(source.institutionName ?? "").trim(),
-    teamName: String(source.teamName ?? "").trim(),
+    eventSlug: cleanString(source.eventSlug).toLowerCase(),
+    categoryCode: cleanString(source.categoryCode).toLowerCase(),
+    idempotencyKey: cleanString(source.idempotencyKey),
+    contactName: cleanString(source.contactName),
+    contactEmail: cleanString(source.contactEmail).toLowerCase(),
+    contactPhone: cleanString(source.contactPhone),
+    institutionName: cleanString(source.institutionName),
+    teamName: cleanString(source.teamName),
     memberNames: Array.isArray(source.memberNames)
-      ? source.memberNames.map((name) => String(name ?? "").trim())
+      ? source.memberNames.map(cleanString)
       : source.memberNames
   };
 }
