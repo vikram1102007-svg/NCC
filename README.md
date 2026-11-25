@@ -8,7 +8,7 @@ A dedicated repository for the college's two-day NCC event. This is the source o
 
 - Public preview: https://ncc-event-management.embarko.app (last verified deployment is static version 1.0.0).
 - Registration backend foundation is merged into `main`, but it has **not** been deployed or connected to a Supabase project.
-- Current safety-fix branch: `fix/current-site-ci-and-demo-safety`. It removes the insecure browser-local account/admin/payment demo and replaces those pages with clear backend-pending states.
+- Current safety-fix branch: `fix/current-site-ci-and-demo-safety`, draft PR #8. It removes the insecure browser-local account/admin/payment demo and replaces those pages with clear backend-pending states. CI run #66 passed on branch commit `05e4999` (22 tests, 0 failures).
 - Registration and login are closed in the preview. No participant details, passwords, payment references or real money are collected.
 - No Supabase project exists yet; migrations and Edge Function source are prepared but not applied/deployed.
 - Admin portal, participant management, QR passes, check-in, exports and payment processing are not live.
