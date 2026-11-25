@@ -164,3 +164,16 @@ test("registration endpoint does not log raw backend error details", () => {
   assert.match(source, /console\.error\("NCC registration request failed; internal details suppressed"\)/);
   assert.doesNotMatch(source, /console\.error\([^\n]*,\s*error\s*\)/);
 });
+
+test("participant and operational tables have no direct anon or authenticated access", () => {
+  const sql = readFileSync(path.join(root, "supabase/migrations/20261124210000_ncc_registration_foundation.sql"), "utf8");
+  const protectedTables = [
+    "registrations", "payments", "attendance", "audit_events", "registration_rate_limits"
+  ];
+  for (const table of protectedTables) {
+    assert.match(sql, new RegExp("alter table public\\\\." + table + " enable row level security", "i"));
+  }
+  assert.match(sql, /revoke all on public\\.events, public\\.event_categories, public\\.registrations,[\\s\\S]*from public, anon, authenticated;/i);
+  assert.doesNotMatch(sql, /grant (?:select|insert|update|delete|all) on public\\.(?:registrations|payments|attendance|audit_events|registration_rate_limits) to (?:anon|authenticated)/i);
+  assert.doesNotMatch(sql, /create policy [^;]+ on public\\.(?:registrations|payments|attendance|audit_events|registration_rate_limits) for (?:select|insert|update|delete|all) to anon/i);
+});
