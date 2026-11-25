@@ -157,3 +157,10 @@ test("public browser config contains no server-side credential names", () => {
   const config = readFileSync(path.join(root, "scripts/config.js"), "utf8");
   assert.doesNotMatch(config, /service_role|secret[_-]?key|NCC_RATE_LIMIT_SECRET|NCC_REGISTRATION_ENABLED/i);
 });
+
+
+test("registration endpoint does not log raw backend error details", () => {
+  const source = readFileSync(path.join(root, "supabase/functions/register/index.ts"), "utf8");
+  assert.match(source, /console\.error\("NCC registration request failed; internal details suppressed"\)/);
+  assert.doesNotMatch(source, /console\.error\([^\n]*,\s*error\s*\)/);
+});
