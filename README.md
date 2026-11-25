@@ -59,8 +59,10 @@ See [Registration setup](docs/REGISTRATION_SETUP.md). Never put a secret/service
 
 ## Payments and QR
 
-- No payment provider is selected or enabled. Use only an institution-approved beneficiary and gateway; sandbox first.
-- Never treat a client-side redirect as proof of payment.
+- A payment **demo page** (`payment.html`) is available from the participant portal. It shows a fictional UPI QR/ID and lets a participant save a demo transaction reference locally.
+- The demo does not process money, send a reference to organisers, or verify payment. The payment status remains `Pending`; an organiser must verify any real payment through an approved payment system.
+- No real beneficiary, UPI ID, gateway or payment credentials are configured. Replace the fictional demo details only after the unit provides and approves official payment information.
+- Never treat a client-side redirect or submitted reference as proof of payment.
 - QR passes will use opaque tokens only, never participant personal information. QR issuance and check-in are not implemented in this branch.
 
 ## Safety and privacy
