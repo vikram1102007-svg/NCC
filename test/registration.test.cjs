@@ -173,7 +173,11 @@ test("participant and operational tables have no direct anon or authenticated ac
   for (const table of protectedTables) {
     assert.ok(sql.includes("alter table public." + table + " enable row level security;"), "RLS must be enabled for " + table);
   }
-  assert.match(sql, /revoke all on public\\.events, public\\.event_categories, public\\.registrations,[\\s\\S]*from public, anon, authenticated;/i);
-  assert.doesNotMatch(sql, /grant (?:select|insert|update|delete|all) on public\\.(?:registrations|payments|attendance|audit_events|registration_rate_limits) to (?:anon|authenticated)/i);
-  assert.doesNotMatch(sql, /create policy [^;]+ on public\\.(?:registrations|payments|attendance|audit_events|registration_rate_limits) for (?:select|insert|update|delete|all) to anon/i);
+  assert.ok(sql.includes("revoke all on public.events, public.event_categories, public.registrations,"));
+  assert.ok(sql.includes("from public, anon, authenticated;"));
+  assert.ok(sql.includes("grant select on public.events, public.event_categories to anon, authenticated;"));
+  for (const table of protectedTables) {
+    assert.doesNotMatch(sql, new RegExp("grant (?:select|insert|update|delete|all) on public[.]" + table + " to (?:anon|authenticated)", "i"));
+    assert.doesNotMatch(sql, new RegExp("create policy [^;]+ on public[.]" + table + " for (?:select|insert|update|delete|all) to anon", "i"));
+  }
 });
