@@ -1,77 +1,66 @@
 # NCC Two-Day Event Management Website
 
-A dedicated project for the college's two-day NCC event. This repository is the source of truth for application code, database migrations, setup instructions, architecture, decisions, issues and progress reports.
+A dedicated repository for the college's two-day NCC event. This is the source of truth for the website, backend source, migrations, architecture, decisions, issue backlog and progress reports.
 
-> Event name, college/unit details, dates, venue, fees, eligibility, permissions, contacts and official branding remain placeholders until supplied and approved.
+> Event name, college/unit details, dates, venue, eligibility, categories, rules, fees, permissions, contacts and official branding are placeholders until supplied and approved.
 
 ## Current status
 
-- Public information preview remains live on Embarko: https://ncc-event-management.embarko.app (last verified deployment version 1.0.0).
-- A registration foundation is being reviewed on branch `feat/registration-foundation`; it has not been merged or deployed.
-- The branch adds a responsive registration form, but it is disabled by default and does not collect participant data until organiser approval and backend configuration.
-- Supabase migration and public registration Edge Function source are prepared. They have **not** been applied or deployed.
-
-- Registration request handling now rejects non-object JSON before reading fields; the shared validator safely handles null, arrays and primitive payloads. The database RPC explicitly validates the contact name, and the migration has a single registration function with complete slug/category/hash guards.
-- Registration input normalisation now accepts only string values for text fields and team-member names; it no longer coerces numbers/objects into strings. Regression coverage was added for non-string inputs.
-- Endpoint-security regression assertions cover origin allowlisting, bounded request bodies, server-only rate-limit configuration, IP/email quotas, no server credentials in browser config, and no direct client access to private participant/operational tables. GitHub Actions run #37 passed on test commit `df3b6fb7884c976b609fc5d92ff9ba359a9f37d5`: `npm run check`, 20 tests passed, 0 failed.
-- Registration Edge Function logging was hardened: backend failures now emit a fixed diagnostic marker rather than the raw error object, reducing the chance of exposing database/provider details or personal data in logs. A regression test guards this behavior.
-- GitHub Actions run #21 passed for code commit `d88f5b22c131bd32f04a62f91d80cbf5ff4f9c4a`, and run #23 passed for the docs-inclusive branch head `cd7b0befff097d71f1b5fd8c76e73ee45bb928fa`: `npm run check`, 14 tests passed, 0 failed. This is Node.js syntax/unit/smoke coverage only; it does not verify Supabase execution or deployment.
-- The connected Supabase account currently has no projects. A dedicated project was quoted at $0/month in the selected organisation, but project creation has not been performed pending the user's explicit confirmation.
-- Admin login/dashboard, participant management, QR passes, check-in, exports and payment workflows are not yet implemented.
-- No real participant data, payment keys or secrets are stored.
+- Public preview: https://ncc-event-management.embarko.app (last verified deployment is static version 1.0.0).
+- Registration backend foundation is merged into `main`, but it has **not** been deployed or connected to a Supabase project.
+- Current safety-fix branch: `fix/current-site-ci-and-demo-safety`. It removes the insecure browser-local account/admin/payment demo and replaces those pages with clear backend-pending states.
+- Registration and login are closed in the preview. No participant details, passwords, payment references or real money are collected.
+- No Supabase project exists yet; migrations and Edge Function source are prepared but not applied/deployed.
+- Admin portal, participant management, QR passes, check-in, exports and payment processing are not live.
 
 ## Run locally
 
 Requirements: Node.js 20 or later.
 
-1. Clone this repository.
+1. Clone the repository.
 2. Open `index.html` in a browser, or run `python -m http.server 8000` and visit http://localhost:8000.
-3. Run `npm test` for the Node.js test suite.
+3. Run `npm test` for tests.
 4. Run `npm run check` for JavaScript syntax checks and tests.
 
-## Project structure
+## Structure
 
-- `index.html` — public event information and gated registration form
-- `assets/styles.css` — responsive styling
-- `scripts/app.js` — navigation, public event/category loading and registration submission
-- `scripts/config.js` — public-only browser configuration placeholders; publishable key only
-- `supabase/migrations/` — versioned database schema and RLS policies
-- `supabase/functions/register/` — public registration Edge Function
-- `supabase/functions/_shared/` — validation shared with tests
-- `test/` — site, registration validation and migration safety tests
-- `.github/workflows/ci.yml` — CI checks on pushes and pull requests
-- `docs/ARCHITECTURE.md` — architecture and security boundaries
-- `docs/DECISIONS.md` — project decisions
-- `docs/REGISTRATION_SETUP.md` — backend setup and activation gates
-- `docs/TESTING.md` — local and CI verification
-- `docs/progress/` — dated progress reports
+- `index.html`, `events.html` — public event information with unapproved facts kept as placeholders
+- `register.html`, `login.html`, `participant.html`, `admin.html`, `payment.html` — backend-pending portal pages
+- `ncc.js` — safe preview behavior; no browser-local persistence of passwords or participant records
+- `ncc.css` — responsive styling
+- `scripts/config.js` — public-only backend configuration placeholders
+- `supabase/migrations/` — versioned PostgreSQL schema and RLS
+- `supabase/functions/register/` — public registration Edge Function source
+- `supabase/functions/_shared/` — shared validation
+- `test/` — static-site and registration/migration tests
+- `.github/workflows/ci.yml` — CI
+- `docs/` — architecture, decisions, setup, testing and progress reports
 
-## Registration activation
+## Registration activation gates
 
-The registration form stays disabled unless all of the following are true:
-- The organiser has approved the event facts, participant fields and privacy notice.
-- A dedicated NCC Supabase project is created and the migration is applied.
-- Approved event/category rows are published and registration is open.
-- The registration Edge Function is deployed and its server-only secrets are configured.
-- `scripts/config.js` contains the public project URL, publishable key, approved event slug, and explicit approval flags plus an HTTPS privacy notice URL.
+Registration can be enabled only after:
+- Organisers approve event facts, categories, capacity, participant fields and a privacy notice.
+- A dedicated NCC Supabase project is created in the user-confirmed organisation and region.
+- The migration is applied and RLS/security advisories are reviewed.
+- A trusted super-admin is created.
+- The registration Edge Function is deployed with server-only secrets.
+- Synthetic end-to-end registration, duplicate and capacity tests pass.
+- The public origin and browser publishable-key configuration are reviewed.
 
-See [Registration setup](docs/REGISTRATION_SETUP.md). Never put a secret/service-role key in browser code.
+See [Registration setup](docs/REGISTRATION_SETUP.md). Never put a service-role key or other secret in browser code.
 
 ## Payments and QR
 
-- A payment **demo page** (`payment.html`) is available from the participant portal. It shows a fictional UPI QR/ID and lets a participant save a demo transaction reference locally.
-- The demo does not process money, send a reference to organisers, or verify payment. The payment status remains `Pending`; an organiser must verify any real payment through an approved payment system.
-- No real beneficiary, UPI ID, gateway or payment credentials are configured. Replace the fictional demo details only after the unit provides and approves official payment information.
-- Never treat a client-side redirect or submitted reference as proof of payment.
-- QR passes will use opaque tokens only, never participant personal information. QR issuance and check-in are not implemented in this branch.
+- No gateway or beneficiary is approved/configured.
+- The payment prototype and fictional UPI QR have been removed from this safety-fix branch.
+- Live payments require an institution-approved merchant account, server-created orders, verified signatures/webhooks and idempotent reconciliation.
+- QR passes must contain opaque tokens only; QR issuance and attendance are not implemented.
 
 ## Safety and privacy
 
 - Never commit secrets, API keys, payment credentials, participant exports or real personal data.
 - Use synthetic test records only.
-- Enforce admin authorization server-side and with database policies.
+- Enforce admin authorization server-side and through database policies.
 - Do not expose attendee lists, payment records or contact details publicly.
-- Collect only the minimum organiser-approved fields and define retention/deletion before registration opens.
+- Define retention, deletion and export rules before collecting real data.
 - Do not publish official NCC/college logos or claims without permission.
-
-See the architecture, decisions, registration setup and testing documents for implementation details.
