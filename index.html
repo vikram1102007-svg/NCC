@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
+  <script src="scripts/config.js" defer></script>
   <script src="scripts/app.js" defer></script>
 </head>
 <body>
@@ -19,7 +20,7 @@
       <a class="brand" href="#" aria-label="NCC event home"><span class="brand-mark" aria-hidden="true">N</span><span><strong>NCC EVENT</strong><small>TWO-DAY COLLEGE EVENT</small></span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
       <nav id="site-nav" class="site-nav" aria-label="Main navigation">
-        <a href="#overview">Overview</a><a href="#schedule">Schedule</a><a href="#activities">Activities</a><a href="#faq">FAQs</a><a class="nav-cta" href="#registration">Registration updates</a>
+        <a href="#overview">Overview</a><a href="#schedule">Schedule</a><a href="#activities">Activities</a><a href="#faq">FAQs</a><a class="nav-cta" href="#registration">Registration</a>
       </nav>
     </div>
   </header>
@@ -79,8 +80,58 @@
     </section>
 
     <section id="registration" class="registration-band"><div class="container registration-inner">
-      <div><p class="eyebrow">PARTICIPANT REGISTRATION</p><h2>Be ready when<br>registration opens.</h2><p>Online registration and QR passes will be enabled after the organiser confirms event details and the registration workflow.</p></div>
-      <div class="registration-panel"><span class="panel-symbol" aria-hidden="true">↗</span><h3>Registration is not open yet</h3><p>We are preparing a secure registration process. No participant details or payments are collected on this preview website.</p><button class="button button-disabled" type="button" disabled>Coming soon</button><small>Check back for the official announcement.</small></div>
+      <div><p class="eyebrow">PARTICIPANT REGISTRATION</p><h2>Take your place<br>when it opens.</h2><p>Registration will connect to a protected database and will open only after the event committee approves the event details, participant fields and privacy notice.</p></div>
+      <div class="registration-panel">
+        <span class="panel-symbol" aria-hidden="true">↗</span>
+        <h3 id="registration-heading">Registration is not open yet</h3>
+        <p id="registration-status" class="registration-status" role="status" aria-live="polite">The secure registration service is being prepared. This form is disabled and does not collect participant details.</p>
+        <form id="registration-form" novalidate>
+          <fieldset id="registration-fields" disabled>
+            <div class="form-field">
+              <label for="registration-category">Event category</label>
+              <select id="registration-category" name="categoryCode" required>
+                <option value="">Choose a category</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="contact-name">Contact / participant name</label>
+              <input id="contact-name" name="contactName" type="text" minlength="2" maxlength="100" autocomplete="name" required>
+            </div>
+            <div class="form-field">
+              <label for="contact-email">Email address</label>
+              <input id="contact-email" name="contactEmail" type="email" maxlength="254" autocomplete="email" required>
+            </div>
+            <div class="form-field">
+              <label for="contact-phone">Contact number</label>
+              <input id="contact-phone" name="contactPhone" type="tel" minlength="8" maxlength="20" autocomplete="tel" required>
+            </div>
+            <div class="form-field">
+              <label for="institution-name">College / institution</label>
+              <input id="institution-name" name="institutionName" type="text" minlength="2" maxlength="160" autocomplete="organization" required>
+            </div>
+            <div id="team-fields" class="team-fields" hidden>
+              <div class="form-field">
+                <label for="team-name">Team name</label>
+                <input id="team-name" name="teamName" type="text" maxlength="100">
+              </div>
+              <div class="form-field">
+                <label for="member-names">Team member names (include the lead; one per line)</label>
+                <textarea id="member-names" name="memberNames" rows="4"></textarea>
+                <small class="field-help">The selected category's approved team-size rules will be checked.</small>
+              </div>
+            </div>
+            <label class="honeypot" aria-hidden="true">Leave this field empty<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+            <p class="privacy-note">Your details will be used only for approved event administration. <a id="privacy-notice-link" href="#" target="_blank" rel="noopener" hidden>Read the approved privacy notice</a></p>
+            <button id="registration-submit" class="button button-primary registration-submit" type="submit" disabled>Submit registration</button>
+          </fieldset>
+        </form>
+        <div id="registration-result" class="registration-result" role="status" aria-live="polite" hidden>
+          <strong>Registration received</strong>
+          <span>Your reference: <b id="registration-reference"></b></span>
+          <small>Keep this reference. QR passes and payment, if approved, will be handled in a later secure step.</small>
+        </div>
+        <small class="registration-footnote">No payment is requested on this page. Never pay a personal account.</small>
+      </div>
     </div></section>
 
     <section id="faq" class="section section-light faq-section"><div class="container faq-layout">
@@ -88,7 +139,7 @@
       <div class="faq-list">
         <details><summary>When will the event take place?</summary><p>The two event dates have not yet been confirmed. The final dates will be published here.</p></details>
         <details><summary>Who can participate?</summary><p>Eligibility and unit/college participation rules are pending organiser confirmation.</p></details>
-        <details><summary>How do I register?</summary><p>Registration is not open yet. The official registration link will appear here once the process is ready.</p></details>
+        <details><summary>How do I register?</summary><p>Registration will open here after the organiser approves the event details, form fields and privacy notice.</p></details>
         <details><summary>Will there be a registration fee?</summary><p>Any fee and approved payment method will be announced by the authorised event committee. Do not pay to personal accounts.</p></details>
         <details><summary>Where can I ask questions?</summary><p>Official organiser contact details will be published here after they are confirmed.</p></details>
       </div>
