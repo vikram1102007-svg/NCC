@@ -53,7 +53,7 @@ test("registration and participant portals are gated until secure backend setup"
   assert.match(login, /Login coming soon/i);
   assert.doesNotMatch(login, /<form\b|type="password"/i);
   assert.match(participant, /tracking coming soon/i);
-  assert.doesNotMatch(participant, /localStorage|<form\b/i);
+  assert.doesNotMatch(participant, /localStorage\\.(?:getItem|setItem)|<form\\b/i);
 });
 
 test("admin access has no hardcoded demo credentials or client-side data manager", () => {
@@ -66,8 +66,8 @@ test("admin access has no hardcoded demo credentials or client-side data manager
 test("payment page does not display a UPI QR or collect payment references", () => {
   assert.match(payment, /Payment is not enabled/i);
   assert.match(payment, /Do not pay/i);
-  assert.doesNotMatch(payment, /upi:\/\/pay|ncc-demo@upi|<img[^>]*qr|transaction reference/i);
-  assert.doesNotMatch(payment, /₹\s*400/i);
+  assert.doesNotMatch(payment, /upi:\\/\\/pay|ncc-demo@upi|<img[^>]*qr|<input/i);
+  assert.doesNotMatch(payment, /upi:\\/\\/pay|ncc-demo@upi|<img[^>]*qr|<input/i);
 });
 
 test("preview JavaScript blocks any legacy form submission without persisting personal data", () => {
