@@ -204,7 +204,7 @@ export default {
         created: registration.created
       }, registration.created ? 201 : 200, headers);
     } catch (error) {
-      console.error("NCC registration request failed", error);
+      console.error("NCC registration request failed; internal details suppressed");
       return jsonResponse({ error: "registration_temporarily_unavailable" }, 503, headers);
     }
   })
