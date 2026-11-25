@@ -1,0 +1,13 @@
+{
+  "name": "ncc-two-day-event",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Public information site and gated registration foundation for a two-day college NCC event",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check scripts/app.js && node --check supabase/functions/_shared/registration-validation.mjs && node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
