@@ -132,3 +132,28 @@ test("registration validator rejects object and numeric values instead of coerci
   assert.ok(nonStringMembers.errors.memberNames);
   assert.deepEqual(nonStringMembers.value.memberNames, ["Cadet One", "", ""]);
 });
+
+test("registration endpoint enforces origin allowlist and bounded request size", () => {
+  const source = readFileSync(path.join(root, "supabase/functions/register/index.ts"), "utf8");
+  assert.match(source, /const DEFAULT_ORIGINS = \[/);
+  assert.match(source, /if \(!origin \|\| !origins\.has\(origin\)\)/);
+  assert.match(source, /contentLength > 16_384/);
+  assert.match(source, /new TextEncoder\(\)\.encode\(rawBody\)\.length > 16_384/);
+  assert.doesNotMatch(source, /Access-Control-Allow-Origin["']?\s*:\s*["']\*["']/);
+});
+
+test("registration endpoint requires server-only rate-limit secret and applies IP/email quotas", () => {
+  const source = readFileSync(path.join(root, "supabase/functions/register/index.ts"), "utf8");
+  assert.match(source, /Deno\.env\.get\("NCC_RATE_LIMIT_SECRET"\)/);
+  assert.match(source, /rateLimitSecret\.length < 32/);
+  assert.match(source, /p_max_requests: 10,[\s\S]*p_window_seconds: 600/);
+  assert.match(source, /p_max_requests: 3,[\s\S]*p_window_seconds: 3600/);
+  assert.match(source, /hmacHex\(rateLimitSecret, `ip:/);
+  assert.match(source, /hmacHex\(rateLimitSecret, `email:/);
+  assert.doesNotMatch(source, /console\.log\([^\n]*(?:contactEmail|contactPhone|contactName|memberNames)/);
+});
+
+test("public browser config contains no server-side credential names", () => {
+  const config = readFileSync(path.join(root, "scripts/config.js"), "utf8");
+  assert.doesNotMatch(config, /service_role|secret[_-]?key|NCC_RATE_LIMIT_SECRET|NCC_REGISTRATION_ENABLED/i);
+});
