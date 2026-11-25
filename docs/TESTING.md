@@ -24,7 +24,7 @@ Requirements: Node.js 20 or later.
 
 GitHub Actions runs `npm run check` on pushes and pull requests to `main`.
 
-The current `main` branch's latest workflow run #56 failed because the test suite still asserted the previous static landing-page markup after the site was redesigned. This branch updates the tests to match the current pages and adds checks for demo-only security gates. A fresh CI result for this branch is required before merging.
+Main's workflow #56 failed because tests still expected the earlier page markup. This safety-fix branch updated the assertions and added security gates. PR #8 CI run #66 passed on commit `05e4999`: 22 tests passed, 0 failed.
 
 ## Not yet verified
 
