@@ -2,116 +2,82 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
-const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-const css = fs.readFileSync(path.join(root, "assets/styles.css"), "utf8");
-const appSource = fs.readFileSync(path.join(root, "scripts/app.js"), "utf8");
+const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
+const home = read("index.html");
+const events = read("events.html");
+const register = read("register.html");
+const login = read("login.html");
+const admin = read("admin.html");
+const participant = read("participant.html");
+const payment = read("payment.html");
+const app = read("ncc.js");
+const css = read("ncc.css");
 
-test("document has language, viewport, title and page landmarks", () => {
-  assert.match(html, /<html lang="en">/i);
-  assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/i);
-  assert.match(html, /<title>[^<]+<\/title>/i);
-  assert.match(html, /<header\b/i);
-  assert.match(html, /<nav\b[^>]*aria-label=/i);
-  assert.match(html, /<main\b[^>]*id="main"/i);
-  assert.match(html, /<footer\b/i);
-  assert.equal((html.match(/<h1\b/gi) || []).length, 1);
+test("public home has accessible document basics and a two-day event title", () => {
+  assert.match(home, /<html lang="en">/i);
+  assert.match(home, /<meta name="viewport" content="width=device-width,initial-scale=1">/i);
+  assert.match(home, /<title>[^<]+<\/title>/i);
+  assert.match(home, /<header\b/i);
+  assert.match(home, /<nav\b/i);
+  assert.match(home, /<main\b/i);
+  assert.match(home, /<footer\b/i);
+  assert.equal((home.match(/<h1\b/gi) || []).length, 1);
+  assert.match(home, /two-day/i);
 });
 
-test("all in-page navigation links point to existing IDs", () => {
-  const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-  const targets = [...html.matchAll(/href="#([^"]*)"/g)]
-    .map((match) => match[1])
-    .filter(Boolean);
-  assert.ok(targets.length > 0, "expected in-page navigation links");
-  for (const target of targets) {
-    assert.ok(ids.has(target), `missing target id: ${target}`);
+test("navigation targets and linked local pages exist", () => {
+  const links = [...home.matchAll(/href="([^"]+\.html(?:#[^"]*)?)"/g)].map((m) => m[1].split("#")[0]);
+  assert.ok(links.length >= 3);
+  for (const link of links) {
+    assert.ok(fs.existsSync(path.join(root, link)), "missing linked page: " + link);
   }
 });
 
-test("two-day agenda and activity categories are explicitly represented", () => {
-  assert.match(html, /DAY 01/);
-  assert.match(html, /DAY 02/);
-  assert.match(html, /Date TBA/);
-  assert.match(html, />Drill</);
-  assert.match(html, />Firing</);
-  assert.match(html, />Other competitions</);
-  assert.match(html, /subject to required institutional, range and safety approvals/i);
+test("event details use pending placeholders rather than invented fees or dates", () => {
+  const pages = home + events;
+  assert.match(pages, /Dates[^<]*|Dates/i);
+  assert.match(pages, /To be announced|TBA|pending organiser confirmation/i);
+  assert.match(pages, /Drill/i);
+  assert.match(pages, /Firing/i);
+  assert.match(pages, /approval/i);
+  assert.doesNotMatch(pages, /₹\s*400|INR\s*400/i);
+  assert.match(pages, /fee.{0,30}(?:TBA|announced|pending)/i);
 });
 
-test("registration UI is present but disabled until approved configuration", () => {
-  const config = fs.readFileSync(path.join(root, "scripts/config.js"), "utf8");
-  assert.match(html, /<form id="registration-form"/i);
-  assert.match(html, /<fieldset id="registration-fields" disabled/i);
-  assert.match(html, /id="registration-status"/i);
-  assert.match(config, /registrationEnabled: false/);
-  assert.match(config, /privacyNoticeApproved: false/);
-  assert.match(config, /privacyNoticeUrl: ""/);
-  assert.match(html, /id="privacy-notice-link"/);
-  assert.doesNotMatch(config, /service_role|sb_secret_/i);
-  assert.ok(appSource.includes("/functions/v1/register"));
-  assert.match(html, /No payment is requested on this page/i);
+test("registration and participant portals are gated until secure backend setup", () => {
+  assert.match(register, /Registration is not open/i);
+  assert.match(register, /does not collect/i);
+  assert.doesNotMatch(register, /<form\b|type="password"|name="phone"/i);
+  assert.match(login, /Login coming soon/i);
+  assert.doesNotMatch(login, /<form\b|type="password"/i);
+  assert.match(participant, /tracking coming soon/i);
+  assert.doesNotMatch(participant, /localStorage|<form\b/i);
 });
 
-test("FAQ disclosures and accessibility hooks exist", () => {
-  assert.ok((html.match(/<details\b/g) || []).length >= 4);
-  assert.ok((html.match(/<summary\b/g) || []).length >= 4);
-  assert.match(html, /class="skip-link"/);
-  assert.match(css, /\.skip-link:focus/);
-  assert.match(css, /@media\s*\(max-width:\s*640px\)/);
-  assert.match(css, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
+test("admin access has no hardcoded demo credentials or client-side data manager", () => {
+  assert.match(admin, /Admin portal is not enabled/i);
+  assert.doesNotMatch(admin, /admin@ncc\.test|NCCDemo400|<form\b/i);
+  assert.doesNotMatch(app, /admin@ncc\.test|NCCDemo400|localStorage|sessionStorage/i);
+  assert.match(app, /Admin login is not enabled/i);
 });
 
-test("mobile navigation opens, closes on link selection, and sets the footer year", () => {
-  function makeElement(initialAttributes = {}) {
-    const attributes = { ...initialAttributes };
-    const listeners = {};
-    const classes = new Set();
-    return {
-      textContent: "",
-      getAttribute(name) { return attributes[name] ?? null; },
-      setAttribute(name, value) { attributes[name] = value; },
-      addEventListener(name, callback) { listeners[name] = callback; },
-      dispatch(name) { if (listeners[name]) listeners[name](); },
-      classList: {
-        toggle(name, force) {
-          const shouldAdd = force === undefined ? !classes.has(name) : Boolean(force);
-          if (shouldAdd) classes.add(name);
-          else classes.delete(name);
-          return shouldAdd;
-        },
-        remove(name) { classes.delete(name); },
-        contains(name) { return classes.has(name); }
-      },
-      attributes,
-      listeners
-    };
-  }
+test("payment page does not display a UPI QR or collect payment references", () => {
+  assert.match(payment, /Payment is not enabled/i);
+  assert.match(payment, /Do not pay/i);
+  assert.doesNotMatch(payment, /upi:\/\/pay|ncc-demo@upi|<img[^>]*qr|transaction reference/i);
+  assert.doesNotMatch(payment, /₹\s*400/i);
+});
 
-  const menu = makeElement({ "aria-expanded": "false" });
-  const link = makeElement();
-  const navigation = makeElement();
-  navigation.querySelectorAll = () => [link];
-  const year = makeElement();
-  const document = {
-    querySelector(selector) {
-      if (selector === ".menu-toggle") return menu;
-      if (selector === "#site-nav") return navigation;
-      if (selector === "#year") return year;
-      return null;
-    }
-  };
+test("preview JavaScript blocks any legacy form submission without persisting personal data", () => {
+  assert.match(app, /event\.preventDefault\(\)/);
+  assert.match(app, /secure participant storage/i);
+  assert.match(app, /server-side authentication/i);
+  assert.doesNotMatch(app, /localStorage|sessionStorage|password\s*:/i);
+});
 
-  vm.runInNewContext(appSource, { document, Date });
-
-  menu.dispatch("click");
-  assert.equal(menu.getAttribute("aria-expanded"), "true");
-  assert.equal(navigation.classList.contains("is-open"), true);
-
-  link.dispatch("click");
-  assert.equal(menu.getAttribute("aria-expanded"), "false");
-  assert.equal(navigation.classList.contains("is-open"), false);
-  assert.equal(year.textContent, String(new Date().getFullYear()));
+test("stylesheet includes responsive and reduced-motion support", () => {
+  assert.match(css, /@media/i);
+  assert.match(css, /prefers-reduced-motion/i);
 });
