@@ -9,3 +9,37 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+button:disabled, .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reg-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pill.paid {
+  background: #eef7ee;
+  color: #27652d;
+}
+
+.pill.cancelled {
+  background: #fff0ee;
+  color: #9d3025;
+}
+
+.message.info {
+  background: #eef4fa;
+  color: #173450;
+  border: 1px solid #cddae7;
+}
