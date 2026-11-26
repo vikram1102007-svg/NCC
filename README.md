@@ -6,12 +6,12 @@ A dedicated repository for the college's two-day NCC event. This is the source o
 
 ## Current status
 
-- Public preview: https://ncc-event-management.embarko.app (last verified deployment is static version 1.0.0).
-- Registration backend foundation is merged into `main`, but it has **not** been deployed or connected to a Supabase project.
-- Current safety-fix branch: `fix/current-site-ci-and-demo-safety`, draft PR #8. It removes the insecure browser-local account/admin/payment demo and replaces those pages with clear backend-pending states. CI run #66 passed on branch commit `05e4999` (22 tests, 0 failures).
-- Registration and login are closed in the preview. No participant details, passwords, payment references or real money are collected.
-- No Supabase project exists yet; migrations and Edge Function source are prepared but not applied/deployed.
-- Admin portal, participant management, QR passes, check-in, exports and payment processing are not live.
+- Public preview URL recorded by the project: https://ncc-event-management.embarko.app. The current main commit has not been independently verified deployed there.
+- Safety and CI correction PR #8 is **merged** into `main`: https://github.com/vikram1102007-svg/NCC/pull/8.
+- Current main commit: `82e2ad1ef2951ec3832aed2d46efc8f2549ded8d`. GitHub Actions run #69 passed: `npm run check`, 22 tests passed, 0 failed.
+- Registration/login are intentionally closed in the preview. The browser-local account/admin/payment demo has been removed; no participant data or payment references are collected.
+- Supabase migration and registration Edge Function source are prepared, but no NCC Supabase project exists and the migration/function have not been applied/deployed.
+- Admin management, QR passes, attendance, exports and payment processing are not live. See [Run 13 progress report](docs/progress/2026-11-26-run-13.md) for the issue-by-issue audit and blockers.
 
 ## Run locally
 
