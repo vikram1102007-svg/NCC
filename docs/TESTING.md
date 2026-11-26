@@ -4,36 +4,34 @@
 
 Requirements: Node.js 20 or later.
 
-- `npm test` runs the built-in Node.js test runner; no third-party test dependency is required.
-- `npm run check` checks the public JavaScript and shared Edge Function validation module, then runs the tests.
+- `npm test` runs the built-in Node.js test runner.
+- `npm run check` syntax-checks `ncc.js`, `scripts/app.js` and the shared registration validator, then runs all tests.
 
-## Current automated coverage
+## Current coverage
 
-- Document language, viewport metadata and landmark structure.
-- Internal navigation links resolve to existing section IDs.
-- Two-day agenda and activity placeholder content is present.
-- Registration form is present but remains disabled by default; browser config contains no secret key.
-- FAQ disclosures, mobile/reduced-motion CSS hooks and responsive registration styles.
-- Mobile navigation opens and closes, and the footer year is populated.
-- Registration payload normalisation and valid individual request shape.
-- Invalid event/category slugs, idempotency key, contact fields and institution fields are rejected.
-- Team member list length is bounded.
-- Null, array and primitive JSON payloads are rejected safely; the endpoint checks object shape before reading the honeypot field.
-- Registration RPC source explicitly validates the contact name.
-- Migration source includes RLS, published-event policy, restricted SECURITY DEFINER RPC grants, event locking, complete event/category/hash guards and duplicate-registration uniqueness.
+- Public home document metadata, landmarks and linked pages.
+- Event content keeps dates, categories and fees as pending approval; no unapproved ₹400 fee is shown.
+- Registration, login, participant and admin pages remain closed until secure backend setup.
+- No hardcoded admin demo credentials or browser-local storage for participant passwords/records.
+- Payment page does not show fictional UPI QR or accept transaction references.
+- Registration payload shape, normalisation and validation.
+- Team-member bounds and malformed JSON handling.
+- Registration endpoint origin allowlist, request-size cap, rate-limit secret and quota assertions.
+- SQL migration source checks for RLS, restricted RPC grants, event locking, idempotency and duplicate-registration protections.
+- Public browser configuration contains no service-role or server secret.
 
 ## CI
 
-GitHub Actions runs `npm run check` on pushes to `main`, pull requests targeting `main`, and manual workflow dispatch. The workflow uses read-only repository permissions.
+GitHub Actions runs `npm run check` on pushes and pull requests to `main`.
 
-Latest verified run: [run #23](https://github.com/vikram1102007-svg/NCC/actions/runs/45460829441) on 2026-11-24, commit `cd7b0befff097d71f1b5fd8c76e73ee45bb928fa` — 14 tests passed, 0 failed. Run #21 also passed on the application-code commit before the documentation-only follow-up.
+Main's workflow #56 failed because tests still expected the earlier page markup. This safety-fix branch updated the assertions and added security gates. PR #8 CI run #66 passed on commit `05e4999`: 22 tests passed, 0 failed.
 
 ## Not yet verified
 
-- The SQL migration has not been applied to a live NCC database.
-- Edge Function TypeScript compilation/deployment and RPC behavior have not been run.
-- RLS role integration, concurrent capacity/idempotency behavior, admin authorization, QR attendance, exports and payment webhooks still need integration tests.
+- SQL migration has not been applied to a live NCC database.
+- Edge Function deployment, RPC execution and database RLS behavior are not tested against a live project.
+- Admin role authorization, QR attendance, exports and payment webhook integration are future test milestones.
 - No browser/device end-to-end or formal accessibility audit has been run.
-- The live Embarko site remains static version 1.0.0; the registration branch has not been deployed.
+- Embarko remains the static version 1.0.0 preview; no backend changes have been deployed.
 
-These checks do not guarantee zero bugs. Backend and browser tests must be added and executed before public registration opens.
+Passing unit/smoke tests does not guarantee zero bugs or production readiness.
