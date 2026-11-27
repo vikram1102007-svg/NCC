@@ -1,1 +1,132 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Demo Login | NCC</title><link rel="stylesheet" href="ncc.css"><script defer src="ncc.js"></script></head><body data-page="login"><header class="top"><a class="brand" href="index.html"><span class="crest">N</span><span>NCC <small>CADET EVENT</small></span></a><nav><a href="index.html">Home</a><a href="events.html">Events</a><a href="register.html">Register</a><a href="login.html">Login</a><a href="participant.html">My Portal</a><a class="navadmin" href="admin.html">Admin demo</a></nav></header><main class="page"><section class="form-card narrow"><p class="eyebrow dark">PARTICIPANT PORTAL · DEMO</p><h1>Welcome back</h1><p class="sub">Log in to your browser-only demo account.</p><div class="notice"><strong>DEMO MODE ONLY.</strong> Use fictional test details. This browser-only prototype is not secure, not shared across devices, and does not submit data to NCC. Do not enter real personal information, real passwords, or make payments.</div><div id="already-logged-in" class="message info hidden" aria-live="polite"></div><form id="login-form"><div class="field"><label for="login-email">Test email</label><input id="login-email" name="email" type="email" required placeholder="cadet@example.test"></div><div class="field"><label for="login-password">Demo password</label><input id="login-password" name="password" type="password" required></div><div id="login-msg" class="message" aria-live="polite"></div><button class="btn gold" type="submit">Log in →</button></form><p class="small-link">New here? <a href="register.html">Create demo account</a></p></section></main><footer><span>© NCC Cadet Event</span><span>Demo login</span></footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d1b2a">
+  <title>Demo Login | NCC Two-Day Event</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="scripts/ui.js"></script>
+  <script defer src="ncc.js"></script>
+</head>
+<body data-page="login">
+  <a class="skip-link" href="#main-content">Skip to login form</a>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">
+        <span class="logo-slot" aria-label="College NCC logo placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2L20 6V12C20 16.97 16.58 20.93 12 22C7.42 20.93 4 16.97 4 12V6L12 2Z" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M12 7L13.5 10.5L17 11L14.3 13.4L15 17L12 15.1L9 17L9.7 13.4L7 11L10.5 10.5L12 7Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">NCC Two-Day Event</span>
+          <span class="brand-sub">College Unit · Placeholder Logo</span>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="events.html">Events</a>
+        <a class="nav-link" href="register.html">Register</a>
+        <a class="nav-link" href="login.html" aria-current="page">Login</a>
+        <a class="nav-link" href="participant.html">My Portal</a>
+        <a class="nav-admin" href="admin.html">Admin Demo</a>
+      </nav>
+    </div>
+  </header>
+  <div class="nav-backdrop" aria-hidden="true"></div>
+
+  <main id="main-content" class="page-shell">
+    <div class="container auth-split">
+      <aside class="auth-brand-panel">
+        <div>
+          <p class="eyebrow eyebrow--gold"><span class="eyebrow-dot"></span> Participant Portal · Demo</p>
+          <h1>Cadet Sign In</h1>
+          <p style="color:var(--ink-on-dark-muted);font-size:15px;margin-top:12px">
+            Access your browser-local demo registrations, check event status, or simulate demo payment status.
+          </p>
+        </div>
+        <ul class="auth-checklist">
+          <li>✓ View your active Firing &amp; Drill demo registrations</li>
+          <li>✓ Add additional categories in one click after signing in</li>
+          <li>✓ Cancel demo entries cleanly from My Portal</li>
+          <li>✓ Browser-local only — no real credentials or data sent</li>
+        </ul>
+      </aside>
+
+      <section class="card">
+        <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
+          <a class="auth-tab is-active" href="login.html" aria-current="page">Log In</a>
+          <a class="auth-tab" href="register.html">Create Demo Account</a>
+        </div>
+
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Existing Demo Account</p>
+        <h2 style="font-size:32px;margin-bottom:6px">Welcome back</h2>
+        <p style="font-size:14px;color:var(--ink-600)">Log in to your browser-only demo account.</p>
+
+        <div class="notice notice-warning">
+          <strong>DEMO MODE ONLY.</strong> Use fictional test details. This browser-only prototype is not secure, not shared across devices, and does not submit data to NCC. Do not enter real personal information, real passwords, or make payments.
+        </div>
+
+        <div id="already-logged-in" class="message info hidden" aria-live="polite"></div>
+
+        <form id="login-form">
+          <div class="field">
+            <label for="login-email">Test email</label>
+            <input id="login-email" name="email" type="email" autocomplete="email" required placeholder="cadet@example.test">
+          </div>
+          <div class="field">
+            <label for="login-password">Demo password</label>
+            <div class="input-wrap">
+              <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Enter demo password">
+              <button class="password-toggle" type="button" data-password-toggle="login-password" aria-pressed="false">Show</button>
+            </div>
+          </div>
+          <div id="login-msg" class="message" aria-live="polite"></div>
+          <button class="btn btn-primary" style="width:100%" type="submit">Log in to My Portal →</button>
+        </form>
+
+        <p style="text-align:center;font-size:13px;color:var(--ink-600);margin-top:18px">
+          New here? <a href="register.html" style="color:var(--olive-700);font-weight:700;text-decoration:underline">Create demo account</a>
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <p class="footer-title">College NCC Two-Day Event</p>
+          <p class="footer-copy">Organised by the College NCC Unit. Event details, official dates, and logos are placeholders until formally approved.</p>
+        </div>
+        <div>
+          <p class="footer-title">Quick Links</p>
+          <ul class="footer-links">
+            <li><a href="index.html">Home &amp; Schedule</a></li>
+            <li><a href="events.html">Events &amp; Criteria</a></li>
+            <li><a href="register.html">Demo Registration</a></li>
+            <li><a href="admin.html">Organiser Admin Demo</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-title">Unit Contact (Placeholder)</p>
+          <ul class="footer-links">
+            <li>Parade Ground, College Campus</li>
+            <li>Email: ncc-unit@college.example</li>
+            <li>Demo login only</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> College NCC Event Demo</span>
+        <span>Demo login · browser storage only</span>
+      </div>
+    </div>
+  </footer>
+  <button id="back-to-top" class="back-to-top" type="button" aria-label="Back to top">↑</button>
+</body>
+</html>
