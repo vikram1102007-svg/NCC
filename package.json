@@ -5,7 +5,7 @@
   "description": "Public information site and gated registration foundation for a two-day college NCC event",
   "scripts": {
     "test": "node --test",
-    "check": "node --check ncc.js && node --check scripts/app.js && node --check supabase/functions/_shared/registration-validation.mjs && node --test"
+    "check": "node --check ncc.js && node --check scripts/ui.js && node --check scripts/app.js && node --check supabase/functions/_shared/registration-validation.mjs && node --test"
   },
   "engines": {
     "node": ">=20"

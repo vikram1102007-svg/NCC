@@ -13,7 +13,8 @@ const admin = read("admin.html");
 const participant = read("participant.html");
 const payment = read("payment.html");
 const app = read("ncc.js");
-const css = read("ncc.css");
+const css = read("assets/styles.css");
+const uiScript = read("scripts/ui.js");
 const demoHelpers = require("../ncc.js");
 
 test("public home has accessible document basics and a two-day event title", () => {
@@ -73,7 +74,8 @@ test("admin demo page has clear demo-only labels, accessible controls and confir
   assert.match(admin, /for="admin-password"/);
   assert.match(admin, /id="admin-export"/);
   assert.match(admin, /id="admin-search"/);
-  assert.match(app, /window\.confirm\(/);
+  assert.match(app, /confirmAction\(|window\.confirm\(/);
+  assert.match(uiScript, /confirmModal/);
 });
 
 test("payment simulation page stays strictly demo-only with no UPI QR or gateway", () => {

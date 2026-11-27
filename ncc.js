@@ -78,10 +78,21 @@ function computeStats(regs) {
 
 function showMessage(id, text, kind = "success") {
   const el = $(id);
-  if (!el) return;
-  el.textContent = text;
-  el.className = "message" + (kind === "error" ? " error" : kind === "info" ? " info" : "");
-  el.style.display = "block";
+  if (el) {
+    el.textContent = text;
+    el.className = "message" + (kind === "error" ? " error" : kind === "info" ? " info" : "");
+    el.style.display = "block";
+  }
+  if (typeof window !== "undefined" && window.NCCUI && typeof window.NCCUI.showToast === "function") {
+    window.NCCUI.showToast(text, kind);
+  }
+}
+
+async function confirmAction(title, message, confirmLabel = "Confirm") {
+  if (typeof window !== "undefined" && window.NCCUI && typeof window.NCCUI.confirmModal === "function") {
+    return window.NCCUI.confirmModal(title, message, confirmLabel);
+  }
+  return window.confirm(message);
 }
 
 async function digest(value) {
@@ -389,9 +400,14 @@ function renderParticipant() {
     .join("");
 
   listEl.querySelectorAll("[data-cancel]").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const regId = btn.dataset.cancel;
-      if (!window.confirm("Cancel demo registration " + regId + "?")) return;
+      const ok = await confirmAction(
+        "Cancel registration?",
+        "Cancel demo registration " + regId + "? This removes it from your active total.",
+        "Cancel registration"
+      );
+      if (!ok) return;
       const all = read(K.regs);
       const target = all.find((x) => x.id === regId && x.userId === s.id);
       if (target) {
@@ -516,9 +532,14 @@ function renderAdmin() {
   });
 
   tbody.querySelectorAll("[data-delete]").forEach((el) => {
-    el.addEventListener("click", () => {
+    el.addEventListener("click", async () => {
       const targetId = el.dataset.delete;
-      if (!window.confirm("Delete demo registration " + targetId + "? This cannot be undone.")) {
+      const ok = await confirmAction(
+        "Delete registration?",
+        "Delete demo registration " + targetId + "? This action cannot be undone.",
+        "Delete"
+      );
+      if (!ok) {
         return;
       }
       write(
