@@ -10,6 +10,7 @@
     "test": "node --test test/store.test.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
     "framer-motion": "^11.15.0",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.469.0",

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUp, CalendarDays, ClipboardCheck, Home, Shield, User } from "lucide-react";
-import { Store } from "../lib/store";
+import { DEFAULT_SETTINGS, Store } from "../lib/store";
 import ParticleBackground from "./ParticleBackground";
 import SplashIntro from "./SplashIntro";
 
@@ -18,7 +18,18 @@ export default function AppShell({ children }) {
   const [scrolled, setScrolled] = useState(false);
   const [showTop, setShowTop] = useState(false);
   const location = useLocation();
-  const settings = Store.getSettings();
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  useEffect(() => {
+    let active = true;
+    Store.getSettings()
+      .then((s) => {
+        if (active && s) setSettings(s);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
   const isDemo = Store.isDemoMode();
 
   useEffect(() => {
@@ -190,7 +201,11 @@ export default function AppShell({ children }) {
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-5 text-[11px] text-slate-400">
             <span>© {new Date().getFullYear()} College NCC Event Portal</span>
-            <span>Demo mode only · No real payments or official emblems</span>
+            <span>
+              {isDemo
+                ? "Demo mode only · No real payments or official emblems"
+                : "Shared cadet portal · Offline / simulated fee status only"}
+            </span>
           </div>
         </div>
       </footer>

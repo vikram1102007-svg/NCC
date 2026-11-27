@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd ncc-react && npm install",
+  "buildCommand": "cd ncc-react && npm run build",
+  "outputDirectory": "ncc-react/dist"
+}

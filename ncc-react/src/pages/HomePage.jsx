@@ -1,30 +1,49 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Calendar, ChevronDown, MapPin, ShieldCheck } from "lucide-react";
-import { Store } from "../lib/store";
+import { DEFAULT_SETTINGS, Store } from "../lib/store";
 import GlassCard from "../components/GlassCard";
 import CountUpStat from "../components/CountUpStat";
 
 const FAQS = [
   {
     q: "Are the dates, venue, and registration fee confirmed?",
-    a: "Official dates, campus venue, and fees are To be announced and pending organiser approval. Demo Mode uses sample capacity and ₹400 demo labels for testing."
+    a: "Official dates, campus venue, and fees are To be announced and pending organiser approval. Fee amounts remain placeholder / offline-collected."
   },
   {
     q: "Is the Firing event confirmed?",
-    a: "No. Firing is strictly subject to approvals from the organising unit and authorised range safety officers before final confirmation."
+    a: "No. Firing registration is currently locked and remains strictly subject to approvals from the organising unit and authorised range safety officers."
   },
   {
     q: "How do cadets receive their QR pass and certificate?",
-    a: "After registering, cadets receive an opaque-token QR pass in My Portal. Once the organiser marks attendance as Present, a PDF certificate can be downloaded and verified publicly."
+    a: "After registering, cadets receive an opaque-token QR pass in My Portal across any device. Once the organiser marks attendance as Present, a PDF certificate can be downloaded and verified publicly."
   }
 ];
 
 export default function HomePage() {
   const reduced = useReducedMotion();
-  const events = useMemo(() => Store.getEvents(), []);
-  const settings = useMemo(() => Store.getSettings(), []);
+  const [events, setEvents] = useState([]);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const isDemo = Store.isDemoMode();
+
+  const loadHome = useCallback(async () => {
+    try {
+      const [evList, sett] = await Promise.all([Store.getEvents(), Store.getSettings()]);
+      setEvents(evList);
+      setSettings(sett);
+    } catch {
+      // keep safe initial defaults if network hiccups
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHome();
+    const onFocus = () => loadHome();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadHome]);
+
   const totalSeats = useMemo(
     () => events.reduce((sum, e) => sum + Number(e.capacity || 0), 0),
     [events]
@@ -70,7 +89,7 @@ export default function HomePage() {
               <span className="h-2 w-2 rounded-full bg-[#e7bc62]" />
               Two-Day College NCC Event
             </p>
-            <h1 className="mt-3 font-display text-5xl font-extrabold uppercase leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="mt-3 font-display text-4xl font-extrabold uppercase leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
               Discipline. Leadership.
               <span className="block text-[#e7bc62]">Ready to Serve.</span>
             </h1>
@@ -98,14 +117,14 @@ export default function HomePage() {
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#e7bc62]">
                 Tentative Event Countdown (Dates TBA)
               </p>
-              <div className="inline-grid grid-cols-4 gap-2 rounded-xl border border-white/15 bg-white/5 p-3 backdrop-blur-md sm:gap-3 sm:p-4">
+              <div className="grid w-full max-w-sm grid-cols-4 gap-1.5 rounded-xl border border-white/15 bg-white/5 p-2.5 backdrop-blur-md sm:inline-grid sm:w-auto sm:gap-3 sm:p-4">
                 {[
                   { v: countdown.d, l: "Days" },
                   { v: countdown.h, l: "Hours" },
                   { v: countdown.m, l: "Mins" },
                   { v: countdown.s, l: "Secs" }
                 ].map((u) => (
-                  <div key={u.l} className="min-w-[56px] text-center">
+                  <div key={u.l} className="min-w-0 text-center sm:min-w-[56px]">
                     <strong className="block font-display text-2xl font-extrabold text-[#e7bc62] sm:text-3xl">
                       {u.v}
                     </strong>
@@ -185,7 +204,7 @@ export default function HomePage() {
           </GlassCard>
           <GlassCard delay={0.05}>
             <span className="text-xs font-bold uppercase tracking-wider text-[#4a5a6b]">
-              Total Demo Slots
+              {isDemo ? "Total Demo Slots" : "Total Event Slots"}
             </span>
             <strong className="mt-2 block font-display text-4xl font-extrabold text-[#0d1b2a]">
               <CountUpStat value={totalSeats} />

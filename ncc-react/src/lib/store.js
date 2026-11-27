@@ -1,6 +1,7 @@
+import { supabase } from "./supabaseClient.js";
 import { isSupabaseConfigured } from "./supabaseConfig.js";
 
-// Demo Mode storage keys (isolated from any live Supabase data)
+// Demo Mode fallback keys (only used when VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are unset)
 const KEYS = {
   events: "ncc_react_events_v1",
   users: "ncc_react_users_v1",
@@ -11,7 +12,7 @@ const KEYS = {
   certs: "ncc_react_certs_v1"
 };
 
-const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS = {
   eventDatesText: "Dates To be announced (Two-Day Format)",
   venueText: "College Parade Ground & Campus Arena (TBA)",
   contactEmail: "ncc-unit@college.example",
@@ -31,7 +32,8 @@ const SEED_EVENTS = [
     teamSizeLabel: "Squad / Individual",
     capacity: 30,
     fee: 400,
-    statusLabel: "Demo Open",
+    statusLabel: "Open",
+    registrationOpen: true,
     subjectToApprovals: false,
     description:
       "Precision foot drill and command assessment judged on turnout, uniformity, and parade timing. Final criteria are pending committee review.",
@@ -51,7 +53,8 @@ const SEED_EVENTS = [
     teamSizeLabel: "Team (2 Cadets)",
     capacity: 40,
     fee: 0,
-    statusLabel: "Demo Open",
+    statusLabel: "Open",
+    registrationOpen: true,
     subjectToApprovals: false,
     description:
       "Written preliminary screening followed by stage finals covering NCC history, Indian defence forces, and current affairs.",
@@ -71,7 +74,8 @@ const SEED_EVENTS = [
     teamSizeLabel: "Individual / Pair",
     capacity: 35,
     fee: 0,
-    statusLabel: "Demo Open",
+    statusLabel: "Open",
+    registrationOpen: true,
     subjectToApprovals: false,
     description:
       "Practical field-craft assessment of 6-figure grid references, prismatic compass bearings, and topographic route plotting.",
@@ -91,7 +95,8 @@ const SEED_EVENTS = [
     teamSizeLabel: "Individual",
     capacity: 40,
     fee: 0,
-    statusLabel: "Demo Open",
+    statusLabel: "Open",
+    registrationOpen: true,
     subjectToApprovals: false,
     description:
       "Timed physical endurance and agility circuit covering standard cadet obstacles under officer supervision.",
@@ -112,6 +117,7 @@ const SEED_EVENTS = [
     capacity: 25,
     fee: 400,
     statusLabel: "Subject to approvals",
+    registrationOpen: false,
     subjectToApprovals: true,
     description:
       "Proposed range activity. Firing is not confirmed and remains strictly subject to approvals from the organising unit and authorised safety officers.",
@@ -209,7 +215,78 @@ export function computeStats(regs) {
   };
 }
 
-function ensureSeeded() {
+function normalizeSettings(row) {
+  if (!row) return { ...DEFAULT_SETTINGS };
+  return {
+    eventDatesText: row.event_dates_text || DEFAULT_SETTINGS.eventDatesText,
+    venueText: row.venue_text || DEFAULT_SETTINGS.venueText,
+    contactEmail: row.contact_email || DEFAULT_SETTINGS.contactEmail,
+    contactPhone: row.contact_phone || DEFAULT_SETTINGS.contactPhone,
+    signatoryLeft: row.signatory_left || DEFAULT_SETTINGS.signatoryLeft,
+    signatoryRight: row.signatory_right || DEFAULT_SETTINGS.signatoryRight
+  };
+}
+
+function normalizeEvent(row, takenMap = {}) {
+  const capacity = Math.max(1, Number(row.capacity) || 30);
+  const taken = Number(takenMap[row.id] || 0);
+  const subjectToApprovals = Boolean(row.subject_to_approvals);
+  const registrationOpen = !subjectToApprovals && row.registration_open !== false;
+  return {
+    id: row.id,
+    title: row.title,
+    day: Number(row.day) === 2 ? 2 : 1,
+    time: row.time || "TBA",
+    venue: row.venue || "TBA",
+    type: row.type === "Team" ? "Team" : "Individual",
+    teamSizeLabel: row.team_size_label || row.type || "Individual",
+    capacity,
+    fee: Math.max(0, Number(row.fee) || 0),
+    statusLabel: row.status_label || (subjectToApprovals ? "Subject to approvals" : "Open"),
+    registrationOpen,
+    subjectToApprovals,
+    description: row.description || "",
+    criteria: Array.isArray(row.criteria) ? row.criteria : [],
+    taken,
+    seatsLeft: Math.max(0, capacity - taken)
+  };
+}
+
+function normalizeReg(row) {
+  return {
+    id: row.id,
+    qrToken: row.qr_token,
+    userId: row.user_id,
+    name: row.name,
+    email: row.email,
+    regimentalNo: row.regimental_no || "",
+    eventId: row.event_id,
+    teamName: row.team_name || "",
+    fee: Number(row.fee) || 0,
+    createdAt: row.created_at,
+    status: row.status,
+    payment: row.payment,
+    attended: Boolean(row.attended),
+    certificateId: row.certificate_id || null
+  };
+}
+
+function normalizeCert(row) {
+  if (!row) return null;
+  return {
+    certificateId: row.certificate_id,
+    registrationId: row.registration_id,
+    participantName: row.participant_name,
+    regimentalNo: row.regimental_no || "N/A",
+    eventTitle: row.event_title,
+    eventDay: row.event_day,
+    issuedAt: row.issued_at,
+    signatoryLeft: row.signatory_left,
+    signatoryRight: row.signatory_right
+  };
+}
+
+function ensureDemoSeeded() {
   const events = readJson(KEYS.events, null);
   if (!Array.isArray(events) || events.length === 0) {
     writeJson(KEYS.events, SEED_EVENTS);
@@ -220,41 +297,180 @@ function ensureSeeded() {
   }
 }
 
+function buildSlugId(title) {
+  const base = String(title || "evt")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 28);
+  return `${base || "evt"}-${randomToken(2).toLowerCase()}`;
+}
+
+async function fetchProfileForUser(user) {
+  if (!user || !supabase) return null;
+  const meta = user.user_metadata || {};
+  const { data } = await supabase
+    .from("ncc_profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (data) {
+    return {
+      id: data.id,
+      name: data.name || meta.name || user.email?.split("@")[0] || "Cadet",
+      email: data.email || user.email || "",
+      phone: data.phone || meta.phone || "",
+      regimentalNo: data.regimental_no || meta.regimentalNo || "",
+      department: data.department || meta.department || "",
+      year: data.year || meta.year || ""
+    };
+  }
+
+  return {
+    id: user.id,
+    name: meta.name || user.email?.split("@")[0] || "Cadet",
+    email: user.email || "",
+    phone: meta.phone || "",
+    regimentalNo: meta.regimentalNo || "",
+    department: meta.department || "",
+    year: meta.year || ""
+  };
+}
+
 export const Store = {
   isDemoMode() {
-    return !isSupabaseConfigured();
+    return !isSupabaseConfigured() || !supabase;
   },
 
-  getSettings() {
-    ensureSeeded();
+  onAuthStateChange(callback) {
+    if (this.isDemoMode()) return () => {};
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      callback(session || null);
+    });
+    return () => subscription.unsubscribe();
+  },
+
+  async getSettings() {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase
+        .from("ncc_settings")
+        .select("*")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return normalizeSettings(data);
+    }
+    ensureDemoSeeded();
     return { ...DEFAULT_SETTINGS, ...readJson(KEYS.settings, {}) };
   },
 
-  updateSettings(patch) {
-    const next = { ...this.getSettings(), ...patch };
+  async updateSettings(patch) {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase
+        .from("ncc_settings")
+        .update({
+          event_dates_text: String(patch.eventDatesText || "").trim(),
+          venue_text: String(patch.venueText || "").trim(),
+          contact_email: String(patch.contactEmail || "").trim(),
+          contact_phone: String(patch.contactPhone || "").trim(),
+          signatory_left: String(patch.signatoryLeft || "").trim(),
+          signatory_right: String(patch.signatoryRight || "").trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", 1)
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      return normalizeSettings(data);
+    }
+    const next = { ...(await this.getSettings()), ...patch };
     writeJson(KEYS.settings, next);
     return next;
   },
 
-  getEvents() {
-    ensureSeeded();
+  async getEvents() {
+    if (!this.isDemoMode()) {
+      const [{ data: eventsData, error: eventsErr }, { data: countsData, error: countsErr }] =
+        await Promise.all([
+          supabase
+            .from("ncc_events")
+            .select("*")
+            .order("day", { ascending: true })
+            .order("created_at", { ascending: true }),
+          supabase.rpc("get_event_taken_counts")
+        ]);
+      if (eventsErr) throw new Error(eventsErr.message);
+      if (countsErr) throw new Error(countsErr.message);
+      const takenMap = {};
+      (countsData || []).forEach((row) => {
+        takenMap[row.event_id] = Number(row.taken_count || 0);
+      });
+      return (eventsData || []).map((row) => normalizeEvent(row, takenMap));
+    }
+
+    ensureDemoSeeded();
     const events = readJson(KEYS.events, SEED_EVENTS);
     const regs = readJson(KEYS.regs, []);
     return events.map((ev) => {
       const taken = regs.filter((r) => r.eventId === ev.id && r.status !== "Cancelled").length;
+      const subjectToApprovals = Boolean(ev.subjectToApprovals);
       return {
         ...ev,
+        subjectToApprovals,
+        registrationOpen: !subjectToApprovals && ev.registrationOpen !== false,
         taken,
         seatsLeft: Math.max(0, Number(ev.capacity || 0) - taken)
       };
     });
   },
 
-  getEventById(id) {
-    return this.getEvents().find((e) => e.id === id) || null;
+  async getEventById(id) {
+    const events = await this.getEvents();
+    return events.find((e) => e.id === id) || null;
   },
 
-  saveEvent(eventObj) {
+  async saveEvent(eventObj) {
+    const cleanCriteria = Array.isArray(eventObj.criteria)
+      ? eventObj.criteria.filter(Boolean)
+      : String(eventObj.criteriaText || "")
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+    const subjectToApprovals = Boolean(eventObj.subjectToApprovals);
+    const registrationOpen = !subjectToApprovals && eventObj.registrationOpen !== false;
+
+    if (!this.isDemoMode()) {
+      const row = {
+        id: eventObj.id || buildSlugId(eventObj.title),
+        title: String(eventObj.title || "").trim(),
+        day: Number(eventObj.day) === 2 ? 2 : 1,
+        time: String(eventObj.time || "TBA").trim(),
+        venue: String(eventObj.venue || "TBA").trim(),
+        type: eventObj.type === "Team" ? "Team" : "Individual",
+        team_size_label: String(
+          eventObj.teamSizeLabel || (eventObj.type === "Team" ? "Team" : "Individual")
+        ).trim(),
+        capacity: Math.max(1, Number(eventObj.capacity) || 30),
+        fee: Math.max(0, Number(eventObj.fee) || 0),
+        status_label: subjectToApprovals ? "Subject to approvals" : "Open",
+        registration_open: registrationOpen,
+        subject_to_approvals: subjectToApprovals,
+        description: String(eventObj.description || "").trim(),
+        criteria: cleanCriteria,
+        updated_at: new Date().toISOString()
+      };
+      const { data, error } = await supabase
+        .from("ncc_events")
+        .upsert(row, { onConflict: "id" })
+        .select()
+        .single();
+      if (error) throw new Error(error.message);
+      return normalizeEvent(data);
+    }
+
     const events = readJson(KEYS.events, SEED_EVENTS);
     const clean = {
       id: eventObj.id || makeId("EVT").toLowerCase(),
@@ -263,18 +479,16 @@ export const Store = {
       time: String(eventObj.time || "TBA").trim(),
       venue: String(eventObj.venue || "TBA").trim(),
       type: eventObj.type === "Team" ? "Team" : "Individual",
-      teamSizeLabel: String(eventObj.teamSizeLabel || (eventObj.type === "Team" ? "Team" : "Individual")).trim(),
+      teamSizeLabel: String(
+        eventObj.teamSizeLabel || (eventObj.type === "Team" ? "Team" : "Individual")
+      ).trim(),
       capacity: Math.max(1, Number(eventObj.capacity) || 30),
       fee: Math.max(0, Number(eventObj.fee) || 0),
-      statusLabel: String(eventObj.statusLabel || "Demo Open").trim(),
-      subjectToApprovals: Boolean(eventObj.subjectToApprovals),
+      statusLabel: subjectToApprovals ? "Subject to approvals" : "Open",
+      registrationOpen,
+      subjectToApprovals,
       description: String(eventObj.description || "").trim(),
-      criteria: Array.isArray(eventObj.criteria)
-        ? eventObj.criteria.filter(Boolean)
-        : String(eventObj.criteriaText || "")
-            .split("\n")
-            .map((s) => s.trim())
-            .filter(Boolean)
+      criteria: cleanCriteria
     };
     const idx = events.findIndex((e) => e.id === clean.id);
     if (idx >= 0) events[idx] = clean;
@@ -283,16 +497,34 @@ export const Store = {
     return clean;
   },
 
-  deleteEvent(eventId) {
+  async deleteEvent(eventId) {
+    if (!this.isDemoMode()) {
+      const { error } = await supabase.from("ncc_events").delete().eq("id", eventId);
+      if (error) throw new Error(error.message);
+      return;
+    }
     const events = readJson(KEYS.events, SEED_EVENTS).filter((e) => e.id !== eventId);
     writeJson(KEYS.events, events);
   },
 
-  getSession() {
+  async getSession() {
+    if (!this.isDemoMode()) {
+      const {
+        data: { session },
+        error
+      } = await supabase.auth.getSession();
+      if (error || !session?.user) return null;
+      return fetchProfileForUser(session.user);
+    }
     return readJson(KEYS.session, null);
   },
 
-  logout() {
+  async logout() {
+    if (!this.isDemoMode()) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw new Error(error.message);
+      return;
+    }
     localStorage.removeItem(KEYS.session);
     localStorage.removeItem(KEYS.admin);
   },
@@ -304,6 +536,51 @@ export const Store = {
     if (!cleanName || !cleanEmail.includes("@") || cleanPass.length < 6) {
       throw new Error("Enter your name, a valid email, and at least 6 password characters.");
     }
+
+    if (!this.isDemoMode()) {
+      const redirectUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}${window.location.pathname}`
+          : undefined;
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password: cleanPass,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: cleanName,
+            phone: String(phone || "").trim(),
+            regimentalNo: String(regimentalNo || "").trim(),
+            department: String(department || "").trim(),
+            year: String(year || "").trim()
+          }
+        }
+      });
+      if (error) throw new Error(error.message);
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        throw new Error("An account with this email already exists. Please log in instead.");
+      }
+
+      if (data.session?.user) {
+        await supabase.from("ncc_profiles").upsert(
+          {
+            id: data.session.user.id,
+            name: cleanName,
+            email: cleanEmail,
+            phone: String(phone || "").trim(),
+            regimental_no: String(regimentalNo || "").trim(),
+            department: String(department || "").trim(),
+            year: String(year || "").trim()
+          },
+          { onConflict: "id" }
+        );
+        const session = await fetchProfileForUser(data.session.user);
+        return { session, needsEmailConfirmation: false, email: cleanEmail };
+      }
+
+      return { session: null, needsEmailConfirmation: true, email: cleanEmail };
+    }
+
     const users = readJson(KEYS.users, []);
     if (users.some((u) => u.email === cleanEmail)) {
       throw new Error("An account with this email already exists. Please log in instead.");
@@ -329,12 +606,37 @@ export const Store = {
       year: user.year
     };
     writeJson(KEYS.session, session);
-    return session;
+    return { session, needsEmailConfirmation: false, email: cleanEmail };
+  },
+
+  async resendSignupEmail(email) {
+    if (this.isDemoMode()) return;
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    if (!cleanEmail) throw new Error("Enter your email address first.");
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: cleanEmail
+    });
+    if (error) throw new Error(error.message);
   },
 
   async login({ email, password }) {
     const cleanEmail = String(email || "").trim().toLowerCase();
-    const hash = await digest(String(password || ""));
+    const cleanPass = String(password || "");
+    if (!cleanEmail || !cleanPass) {
+      throw new Error("Enter both email and password.");
+    }
+
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: cleanPass
+      });
+      if (error) throw new Error(error.message);
+      return fetchProfileForUser(data.user);
+    }
+
+    const hash = await digest(cleanPass);
     const user = readJson(KEYS.users, []).find((u) => u.email === cleanEmail && u.passwordHash === hash);
     if (!user) {
       throw new Error("Demo email or password did not match.");
@@ -351,15 +653,27 @@ export const Store = {
     return session;
   },
 
-  registerForEvents(user, eventIds, teamName = "") {
+  async registerForEvents(user, eventIds, teamName = "") {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase.rpc("register_for_ncc_events", {
+        p_event_ids: eventIds,
+        p_team_name: String(teamName || "").trim()
+      });
+      if (error) throw new Error(error.message);
+      return { added: (data || []).map(normalizeReg), skipped: [] };
+    }
+
     const all = readJson(KEYS.regs, []);
-    const events = this.getEvents();
+    const events = await this.getEvents();
     const added = [];
     const skipped = [];
 
     for (const eventId of eventIds) {
       const ev = events.find((e) => e.id === eventId);
       if (!ev) continue;
+      if (!ev.registrationOpen || ev.subjectToApprovals) {
+        throw new Error(`${ev.title} registration is not open (subject to approvals).`);
+      }
 
       const duplicate = all.some(
         (r) => r.userId === user.id && r.eventId === eventId && r.status !== "Cancelled"
@@ -381,7 +695,7 @@ export const Store = {
 
       const reg = {
         id: makeId("NCC"),
-        qrToken: `TKN-${randomToken(8)}`, // Opaque random token only — never stores PII
+        qrToken: `TKN-${randomToken(8)}`,
         userId: user.id,
         name: user.name,
         email: user.email,
@@ -403,14 +717,34 @@ export const Store = {
     return { added, skipped };
   },
 
-  getMyRegistrations() {
-    const s = this.getSession();
+  async getMyRegistrations() {
+    if (!this.isDemoMode()) {
+      const session = await this.getSession();
+      if (!session) return [];
+      const { data, error } = await supabase
+        .from("ncc_registrations")
+        .select("*")
+        .eq("user_id", session.id)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data || []).map(normalizeReg);
+    }
+
+    const s = await this.getSession();
     if (!s) return [];
     return readJson(KEYS.regs, []).filter((r) => r.userId === s.id);
   },
 
-  cancelRegistration(regId) {
-    const s = this.getSession();
+  async cancelRegistration(regId) {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase.rpc("cancel_my_registration", {
+        p_reg_id: regId
+      });
+      if (error) throw new Error(error.message);
+      return normalizeReg(data);
+    }
+
+    const s = await this.getSession();
     if (!s) throw new Error("Please log in first.");
     const all = readJson(KEYS.regs, []);
     const target = all.find((r) => r.id === regId && r.userId === s.id);
@@ -420,8 +754,16 @@ export const Store = {
     return target;
   },
 
-  simulatePayment(regId) {
-    const s = this.getSession();
+  async simulatePayment(regId) {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase.rpc("simulate_my_demo_payment", {
+        p_reg_id: regId
+      });
+      if (error) throw new Error(error.message);
+      return normalizeReg(data);
+    }
+
+    const s = await this.getSession();
     if (!s) throw new Error("Please log in first.");
     const all = readJson(KEYS.regs, []);
     const target = all.find((r) => r.id === regId && r.userId === s.id && r.status !== "Cancelled");
@@ -431,11 +773,37 @@ export const Store = {
     return target;
   },
 
-  isAdmin() {
+  async isAdmin() {
+    if (!this.isDemoMode()) {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+      if (!session?.user) return false;
+      const { data, error } = await supabase.rpc("is_ncc_admin");
+      if (error) return false;
+      return Boolean(data);
+    }
     return Boolean(readJson(KEYS.admin, false));
   },
 
-  adminLogin({ email, password }) {
+  async adminLogin({ email, password }) {
+    if (!this.isDemoMode()) {
+      const cleanEmail = String(email || "").trim().toLowerCase();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: String(password || "")
+      });
+      if (error) throw new Error(error.message);
+      const allowed = await this.isAdmin();
+      if (!allowed) {
+        await supabase.auth.signOut();
+        throw new Error(
+          "Access denied: this account does not have Organiser / Admin role in the database."
+        );
+      }
+      return true;
+    }
+
     if (String(email).trim() === "admin@ncc.test" && String(password) === "NCCDemo400") {
       writeJson(KEYS.admin, true);
       return true;
@@ -443,26 +811,51 @@ export const Store = {
     throw new Error("Admin demo credentials did not match.");
   },
 
-  getAllRegistrations() {
+  async getAllRegistrations() {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase
+        .from("ncc_registrations")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data || []).map(normalizeReg);
+    }
     return readJson(KEYS.regs, []);
   },
 
-  updateRegistration(regId, patch) {
+  async updateRegistration(regId, patch) {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase.rpc("admin_update_registration", {
+        p_reg_id: regId,
+        p_status: patch.status ?? null,
+        p_payment: patch.payment ?? null,
+        p_attended: typeof patch.attended === "boolean" ? patch.attended : null
+      });
+      if (error) throw new Error(error.message);
+      return normalizeReg(data);
+    }
+
     const all = readJson(KEYS.regs, []);
     const target = all.find((r) => r.id === regId);
     if (!target) throw new Error("Registration not found.");
     Object.assign(target, patch);
-
-    // Issue deterministic certificate record when marked attended
     if (target.attended && !target.certificateId) {
       target.certificateId = makeId("CERT");
-      this.recordCertificate(target);
+      await this.recordCertificate(target);
     }
     writeJson(KEYS.regs, all);
     return target;
   },
 
-  checkInByToken(token) {
+  async checkInByToken(token) {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase.rpc("admin_checkin_by_token", {
+        p_token: String(token || "").trim()
+      });
+      if (error) throw new Error(error.message);
+      return normalizeReg(data);
+    }
+
     const clean = String(token || "").trim().toUpperCase();
     if (!clean) throw new Error("Enter a QR pass token or reference ID.");
     const all = readJson(KEYS.regs, []);
@@ -475,15 +868,23 @@ export const Store = {
     return this.updateRegistration(target.id, { attended: true, status: "Confirmed" });
   },
 
-  deleteRegistration(regId) {
+  async deleteRegistration(regId) {
+    if (!this.isDemoMode()) {
+      const { error } = await supabase.from("ncc_registrations").delete().eq("id", regId);
+      if (error) throw new Error(error.message);
+      return;
+    }
     const all = readJson(KEYS.regs, []).filter((r) => r.id !== regId);
     writeJson(KEYS.regs, all);
   },
 
-  recordCertificate(reg) {
+  async recordCertificate(reg) {
+    if (!this.isDemoMode()) {
+      return this.ensureCertificateForReg(reg.id);
+    }
     const certs = readJson(KEYS.certs, {});
-    const ev = this.getEventById(reg.eventId);
-    const settings = this.getSettings();
+    const ev = await this.getEventById(reg.eventId);
+    const settings = await this.getSettings();
     certs[reg.certificateId] = {
       certificateId: reg.certificateId,
       participantName: reg.name,
@@ -498,7 +899,20 @@ export const Store = {
     return certs[reg.certificateId];
   },
 
-  ensureCertificateForReg(regId) {
+  async ensureCertificateForReg(regId) {
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase
+        .from("ncc_certificates")
+        .select("*")
+        .eq("registration_id", regId)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!data) {
+        throw new Error("Certificates are available only after attendance is marked present.");
+      }
+      return normalizeCert(data);
+    }
+
     const all = readJson(KEYS.regs, []);
     const reg = all.find((r) => r.id === regId);
     if (!reg || !reg.attended || reg.status === "Cancelled") {
@@ -511,9 +925,16 @@ export const Store = {
     return this.recordCertificate(reg);
   },
 
-  getCertificateById(certId) {
+  async getCertificateById(certId) {
     const clean = String(certId || "").trim().toUpperCase();
     if (!clean) return null;
+    if (!this.isDemoMode()) {
+      const { data, error } = await supabase.rpc("verify_ncc_certificate", {
+        p_cert_id: clean
+      });
+      if (error) throw new Error(error.message);
+      return data?.[0] ? normalizeCert(data[0]) : null;
+    }
     const certs = readJson(KEYS.certs, {});
     return certs[clean] || null;
   }

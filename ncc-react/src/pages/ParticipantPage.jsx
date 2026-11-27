@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Award, CreditCard, LogOut, PlusCircle, QrCode, XCircle } from "lucide-react";
 import { Store, computeStats } from "../lib/store";
@@ -7,33 +7,75 @@ import CountUpStat from "../components/CountUpStat";
 
 export default function ParticipantPage({ onToast, onConfirm }) {
   const navigate = useNavigate();
-  const [tick, setTick] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [regs, setRegs] = useState([]);
   const [qrModal, setQrModal] = useState(null);
+  const isDemo = Store.isDemoMode();
 
-  const session = Store.getSession();
+  const loadAll = useCallback(async () => {
+    try {
+      const sess = await Store.getSession();
+      if (!sess) {
+        setSession(null);
+        setLoading(false);
+        navigate("/login", { replace: true });
+        return;
+      }
+      const [evList, myRegs] = await Promise.all([
+        Store.getEvents(),
+        Store.getMyRegistrations()
+      ]);
+      setSession(sess);
+      setEvents(evList);
+      setRegs(myRegs);
+    } catch (err) {
+      onToast(err.message || "Could not load your registrations.", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, onToast]);
+
+  useEffect(() => {
+    loadAll();
+    const unsub = Store.onAuthStateChange(() => loadAll());
+    const onFocus = () => loadAll();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      unsub();
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [loadAll]);
+
   const eventsMap = useMemo(() => {
     const map = {};
-    Store.getEvents().forEach((e) => {
+    events.forEach((e) => {
       map[e.id] = e;
     });
     return map;
-  }, [tick]);
+  }, [events]);
 
-  const regs = useMemo(() => Store.getMyRegistrations(), [tick]);
   const stats = useMemo(() => computeStats(regs), [regs]);
 
-  useEffect(() => {
-    if (!session) {
-      navigate("/login", { replace: true });
-    }
-  }, [session, navigate]);
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="ncc-skeleton h-32 rounded-2xl" />
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="ncc-skeleton h-28 rounded-xl" />
+          <div className="ncc-skeleton h-28 rounded-xl" />
+          <div className="ncc-skeleton h-28 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   if (!session) return null;
 
   const openQrPass = async (reg) => {
     try {
       const QRCode = (await import("qrcode")).default;
-      // QR contains ONLY the opaque random token — never personal data
       const dataUrl = await QRCode.toDataURL(reg.qrToken, {
         width: 240,
         margin: 2,
@@ -45,11 +87,11 @@ export default function ParticipantPage({ onToast, onConfirm }) {
     }
   };
 
-  const handleSimulatePayment = (regId) => {
+  const handleSimulatePayment = async (regId) => {
     try {
-      Store.simulatePayment(regId);
-      setTick((t) => t + 1);
-      onToast("Demo payment status updated locally. No real money moved.", "success");
+      await Store.simulatePayment(regId);
+      await loadAll();
+      onToast("Demo payment status updated. No real money transferred.", "success");
     } catch (err) {
       onToast(err.message, "error");
     }
@@ -57,20 +99,24 @@ export default function ParticipantPage({ onToast, onConfirm }) {
 
   const handleCancel = async (reg) => {
     const ok = await onConfirm({
-      title: "Cancel demo registration?",
+      title: "Cancel registration?",
       message: `Cancel ${eventsMap[reg.eventId]?.title || reg.eventId} (${reg.id})?`,
       confirmLabel: "Cancel Registration"
     });
     if (!ok) return;
-    Store.cancelRegistration(reg.id);
-    setTick((t) => t + 1);
-    onToast(`Cancelled ${reg.id}.`, "info");
+    try {
+      await Store.cancelRegistration(reg.id);
+      await loadAll();
+      onToast(`Cancelled ${reg.id}.`, "info");
+    } catch (err) {
+      onToast(err.message, "error");
+    }
   };
 
   const handleDownloadCertificate = async (reg) => {
     try {
       const { jsPDF } = await import("jspdf");
-      const cert = Store.ensureCertificateForReg(reg.id);
+      const cert = await Store.ensureCertificateForReg(reg.id);
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       doc.setFillColor(13, 27, 42);
       doc.rect(0, 0, 297, 210, "F");
@@ -82,7 +128,7 @@ export default function ParticipantPage({ onToast, onConfirm }) {
 
       doc.setTextColor(75, 92, 52);
       doc.setFontSize(11);
-      doc.text("COLLEGE NCC TWO-DAY EVENT · DEMO CERTIFICATE", 148.5, 42, { align: "center" });
+      doc.text("COLLEGE NCC TWO-DAY EVENT · CERTIFICATE", 148.5, 42, { align: "center" });
 
       doc.setTextColor(13, 27, 42);
       doc.setFontSize(28);
@@ -118,7 +164,6 @@ export default function ParticipantPage({ onToast, onConfirm }) {
       doc.text(cert.signatoryRight, 220, 173, { align: "center" });
 
       doc.save(`NCC-Certificate-${cert.certificateId}.pdf`);
-      setTick((t) => t + 1);
       onToast(`Downloaded PDF certificate (${cert.certificateId}).`, "success");
     } catch (err) {
       onToast(err.message, "error");
@@ -126,50 +171,56 @@ export default function ParticipantPage({ onToast, onConfirm }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+    <div className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-6 sm:py-12">
       {/* Profile Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#08121e] to-[#14283e] p-6 text-white shadow-lg">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#08121e] to-[#14283e] p-5 text-white shadow-lg sm:p-6">
+        <div className="min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#e7bc62]">
-            Participant Portal · Demo
+            Participant Portal · {isDemo ? "Demo" : "Live Sync"}
           </p>
-          <h1 className="mt-1 font-display text-3xl font-extrabold sm:text-4xl">
+          <h1 className="mt-1 break-words font-display text-2xl font-extrabold sm:text-4xl">
             Welcome, {session.name}
           </h1>
-          <p className="mt-1 text-xs text-slate-300">
+          <p className="mt-1 break-all text-xs text-slate-300">
             {session.email} {session.regimentalNo ? `· ${session.regimentalNo}` : ""}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Link
             to="/register"
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md bg-[#d9a742] px-4 py-2 text-xs font-bold text-[#08121e]"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-md bg-[#d9a742] px-4 py-2 text-xs font-bold text-[#08121e] sm:flex-none"
           >
             <PlusCircle className="h-4 w-4" /> Add Event
           </Link>
           <Link
             to="/payment"
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/30 px-4 py-2 text-xs font-bold text-white hover:bg-white/10"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-md border border-white/30 px-4 py-2 text-xs font-bold text-white hover:bg-white/10 sm:flex-none"
           >
             <CreditCard className="h-4 w-4" /> Demo Payment
           </Link>
           <button
             type="button"
-            onClick={() => {
-              Store.logout();
-              onToast("Logged out of Demo Portal.", "info");
+            onClick={async () => {
+              await Store.logout();
+              onToast("Signed out.", "info");
               navigate("/");
             }}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/30 px-4 py-2 text-xs font-bold text-white hover:bg-white/10"
+            className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-md border border-white/30 px-4 py-2 text-xs font-bold text-white hover:bg-white/10"
           >
             <LogOut className="h-4 w-4" /> Log out
           </button>
         </div>
       </div>
 
-      <div className="mt-4 rounded-md border-l-4 border-[#b88422] bg-[#fdf5e2] p-3 text-xs text-[#5c400b]">
-        <strong>DEMO MODE ONLY.</strong> Registrations, QR passes, payment statuses, and certificates shown here are stored locally in your browser and are not connected to live Supabase storage.
-      </div>
+      {isDemo ? (
+        <div className="mt-4 rounded-md border-l-4 border-[#b88422] bg-[#fdf5e2] p-3 text-xs text-[#5c400b]">
+          <strong>DEMO MODE ONLY.</strong> Registrations and certificates shown here are stored locally in this browser.
+        </div>
+      ) : (
+        <div className="mt-4 rounded-md border-l-4 border-[#4b5c34] bg-[#eef2e6] p-3 text-xs text-[#2b3c4d]">
+          <strong>Synced Across Devices.</strong> Your registrations, QR check-in passes, attendance, and certificates load directly from the shared NCC database. Payment simulation remains demo-only.
+        </div>
+      )}
 
       {/* Stats */}
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -183,7 +234,7 @@ export default function ParticipantPage({ onToast, onConfirm }) {
         </GlassCard>
         <GlassCard immediate>
           <span className="text-xs font-bold uppercase tracking-wider text-[#4a5a6b]">
-            Active Demo Total
+            Active Fee Total
           </span>
           <strong className="mt-1 block font-display text-4xl font-extrabold text-[#0d1b2a]">
             <CountUpStat value={stats.feeTotal} prefix="₹" />
@@ -203,7 +254,7 @@ export default function ParticipantPage({ onToast, onConfirm }) {
       <div className="mt-8 grid gap-4">
         {regs.length === 0 ? (
           <GlassCard className="text-center">
-            <p className="text-sm text-[#4a5a6b]">No demo registrations yet.</p>
+            <p className="text-sm text-[#4a5a6b]">No event registrations yet.</p>
             <Link
               to="/events"
               className="mt-4 inline-flex min-h-[44px] items-center rounded-md bg-[#d9a742] px-4 py-2 text-sm font-bold text-[#08121e]"
@@ -218,7 +269,7 @@ export default function ParticipantPage({ onToast, onConfirm }) {
             const isPaid = r.payment === "Demo paid";
             return (
               <GlassCard key={r.id} className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div>
+                <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-display text-2xl font-extrabold text-[#0d1b2a]">
                       {ev?.title || r.eventId}
@@ -245,7 +296,7 @@ export default function ParticipantPage({ onToast, onConfirm }) {
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-[#4a5a6b]">
+                  <p className="mt-1 break-all text-xs text-[#4a5a6b]">
                     Ref: <strong>{r.id}</strong> · QR Token: <strong>{r.qrToken}</strong>
                     {r.teamName ? ` · Team: ${r.teamName}` : ""}
                   </p>
@@ -324,9 +375,9 @@ export default function ParticipantPage({ onToast, onConfirm }) {
             <img
               src={qrModal.dataUrl}
               alt={`QR pass token ${qrModal.reg.qrToken}`}
-              className="mx-auto mt-4 h-52 w-52 rounded-lg border border-slate-200 p-2"
+              className="mx-auto mt-4 aspect-square w-full max-w-[208px] rounded-lg border border-slate-200 p-2"
             />
-            <p className="mt-3 font-mono text-xs font-bold text-[#102030]">
+            <p className="mt-3 break-all font-mono text-xs font-bold text-[#102030]">
               {qrModal.reg.qrToken}
             </p>
             <p className="mt-1 text-[11px] text-[#4a5a6b]">

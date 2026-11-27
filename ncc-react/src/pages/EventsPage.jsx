@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
@@ -9,12 +9,23 @@ export default function EventsPage() {
   const [dayFilter, setDayFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const events = useMemo(() => Store.getEvents(), []);
+  const [events, setEvents] = useState([]);
+
+  const loadEvents = useCallback(async () => {
+    try {
+      const list = await Store.getEvents();
+      setEvents(list);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 180);
-    return () => clearTimeout(t);
-  }, []);
+    loadEvents();
+    const onFocus = () => loadEvents();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadEvents]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -162,12 +173,18 @@ export default function EventsPage() {
                   >
                     Details &amp; Criteria
                   </Link>
-                  <Link
-                    to={`/register?event=${ev.id}`}
-                    className="inline-flex min-h-[44px] items-center rounded-md bg-[#d9a742] px-4 py-2 text-xs font-bold text-[#08121e] hover:bg-[#e7bc62] active:scale-[0.98]"
-                  >
-                    Register →
-                  </Link>
+                  {ev.registrationOpen && !ev.subjectToApprovals && ev.seatsLeft > 0 ? (
+                    <Link
+                      to={`/register?event=${ev.id}`}
+                      className="inline-flex min-h-[44px] items-center rounded-md bg-[#d9a742] px-4 py-2 text-xs font-bold text-[#08121e] hover:bg-[#e7bc62] active:scale-[0.98]"
+                    >
+                      Register →
+                    </Link>
+                  ) : (
+                    <span className="inline-flex min-h-[44px] items-center rounded-md bg-[#fdf5e2] px-3 py-2 text-[11px] font-bold text-[#7c560f]">
+                      {ev.subjectToApprovals || !ev.registrationOpen ? "Subject to approvals" : "Full"}
+                    </span>
+                  )}
                 </div>
               </GlassCard>
             );
