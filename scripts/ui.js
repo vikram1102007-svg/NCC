@@ -18,6 +18,7 @@
 
     if (toggle && nav) {
       const setOpen = (open) => {
+        nav.classList.add("is-animating");
         toggle.setAttribute("aria-expanded", String(open));
         nav.classList.toggle("is-open", open);
         if (backdrop) backdrop.classList.toggle("is-open", open);
