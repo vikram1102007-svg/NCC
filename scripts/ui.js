@@ -1,6 +1,130 @@
 // Presentation-only UI helpers: header scroll, mobile drawer, countdown, reveal, count-up, toasts, modal.
 (function () {
+  const NCC_EVENTS = [
+    {
+      id: "drill",
+      badge: "Day 1 · Squad / Individual",
+      day: 1,
+      title: "Drill",
+      summary: "Precision foot drill and command execution judged on turnout, uniformity, and parade timing.",
+      date: "Day 1 · Date To be announced",
+      time: "09:30 IST (Tentative)",
+      venue: "College Parade Ground (TBA)",
+      type: "Squad / Individual",
+      fee: "Fee to be announced",
+      status: "Demo Open",
+      capacity: 30,
+      registrationOpen: true,
+      requiresApproval: false,
+      demoSlug: "drill",
+      note: "Drill category rules and squad size are pending final committee confirmation.",
+      criteria: [
+        "Valid College ID and NCC enrollment check at reporting desk.",
+        "Complete NCC uniform turnout, polished footwear, and parade discipline.",
+        "Synchronisation, posture, and command clarity during squad inspection."
+      ]
+    },
+    {
+      id: "firing",
+      badge: "Subject to approvals",
+      day: 2,
+      title: "Firing",
+      detailTitle: "Firing (Subject to approvals)",
+      summary: "Proposed range activity. Firing is not confirmed and requires formal organiser and safety approval.",
+      date: "Day 2 · Date To be announced",
+      time: "11:00 IST (Subject to approvals)",
+      venue: "Authorised Range Facility (TBA)",
+      type: "Individual",
+      fee: "Fee to be announced",
+      status: "Subject to approvals",
+      capacity: 25,
+      registrationOpen: false,
+      requiresApproval: true,
+      demoSlug: null,
+      note: "Registration is not open. This activity is subject to approvals.",
+      criteria: [
+        "Mandatory safety briefing and officer supervision before range entry.",
+        "Formal organiser and unit approval required prior to final scheduling.",
+        "Strict adherence to range discipline and zero-tolerance safety rules."
+      ]
+    },
+    {
+      id: "quiz",
+      badge: "Day 1 · Team (2 Cadets)",
+      day: 1,
+      title: "NCC & Defence Quiz",
+      summary: "Written preliminary round followed by stage finals on NCC history, defence forces, and general awareness.",
+      date: "Day 1 · Date To be announced",
+      time: "13:30 IST (Tentative)",
+      venue: "College Auditorium (TBA)",
+      type: "Team (2 Cadets)",
+      fee: "Fee to be announced",
+      status: "Pending confirmation",
+      capacity: 40,
+      registrationOpen: true,
+      requiresApproval: false,
+      demoSlug: null,
+      note: "Quiz category rules are pending official organiser confirmation.",
+      criteria: [
+        "Teams of two cadets from the same unit or institution (pending confirmation).",
+        "Preliminary written screening round followed by top-team stage finals.",
+        "No electronic devices permitted during the written or stage rounds."
+      ]
+    },
+    {
+      id: "map-reading",
+      badge: "Day 2 · Individual / Pair",
+      day: 2,
+      title: "Map Reading",
+      summary: "Practical field-craft test covering grid references, compass bearings, and route plotting.",
+      date: "Day 2 · Date To be announced",
+      time: "15:30 IST (Tentative)",
+      venue: "Training Ground / Field Area (TBA)",
+      type: "Individual / Pair",
+      fee: "Fee to be announced",
+      status: "Pending confirmation",
+      capacity: 35,
+      registrationOpen: true,
+      requiresApproval: false,
+      demoSlug: null,
+      note: "Map Reading equipment rules and reporting details are pending confirmation.",
+      criteria: [
+        "Ability to read 6-figure grid references and topographic map symbols.",
+        "Prismatic compass bearing and back-bearing accuracy under time limit.",
+        "Own basic stationery (pencil, scale, eraser) as directed by organisers."
+      ]
+    },
+    {
+      id: "obstacle",
+      badge: "Day 2 · Individual",
+      day: 2,
+      title: "Obstacle Course",
+      summary: "Timed physical agility circuit covering standard cadet obstacles under officer supervision.",
+      date: "Day 2 · Date To be announced",
+      time: "08:00 IST (Tentative)",
+      venue: "Obstacle Arena (TBA)",
+      type: "Individual",
+      fee: "Fee to be announced",
+      status: "Pending confirmation",
+      capacity: 40,
+      registrationOpen: true,
+      requiresApproval: false,
+      demoSlug: null,
+      note: "Medical fitness declaration and safety briefing are mandatory once confirmed.",
+      criteria: [
+        "Appropriate PT kit / sports footwear required for safety on the course.",
+        "Completion of all standard obstacles within the allotted time window.",
+        "Mandatory warm-up and medical clearance prior to starting."
+      ]
+    }
+  ];
+
+  if (typeof module === "object" && module.exports) {
+    module.exports = { NCC_EVENTS };
+  }
+
   if (typeof document === "undefined") return;
+  window.NCC_EVENTS = NCC_EVENTS;
 
   function initHeaderAndMenu() {
     const header = document.querySelector(".site-header");
@@ -259,9 +383,126 @@
     });
   }
 
+  function createEventCard(ev, includeMeter) {
+    const article = document.createElement("article");
+    article.id = ev.id;
+    article.className = "card card-hover event-card";
+    article.dataset.eventCard = "";
+    article.dataset.day = String(ev.day);
+    article.dataset.eventSlug = ev.id;
+    article.dataset.capacity = String(ev.capacity);
+
+    const top = document.createElement("div");
+    const badgeRow = document.createElement("div");
+    badgeRow.className = "reg-actions";
+    badgeRow.style.justifyContent = "space-between";
+
+    const dayPill = document.createElement("span");
+    dayPill.className = "pill pill-navy";
+    dayPill.textContent = "Day " + ev.day;
+
+    const tagPill = document.createElement("span");
+    tagPill.className = ev.requiresApproval ? "pill pill-gold" : "pill pill-olive";
+    tagPill.textContent = ev.requiresApproval ? "Subject to approvals" : ev.type;
+
+    badgeRow.append(dayPill, tagPill);
+
+    const h3 = document.createElement("h3");
+    h3.textContent = ev.title;
+
+    const p = document.createElement("p");
+    p.textContent = ev.summary;
+
+    top.append(badgeRow, h3, p);
+
+    if (includeMeter) {
+      const meter = document.createElement("div");
+      meter.className = "seat-meter";
+      const head = document.createElement("div");
+      head.className = "seat-meter-head";
+      const seatsSpan = document.createElement("span");
+      seatsSpan.dataset.seatsText = "";
+      seatsSpan.textContent = ev.demoSlug ? `${ev.capacity} of ${ev.capacity} demo slots left` : "Capacity TBA";
+      const feeSpan = document.createElement("span");
+      feeSpan.textContent = "Fee TBA";
+      head.append(seatsSpan, feeSpan);
+
+      const track = document.createElement("div");
+      track.className = "seat-track";
+      const fill = document.createElement("div");
+      fill.className = "seat-fill";
+      fill.dataset.seatsBar = "";
+      fill.style.width = "8%";
+      track.appendChild(fill);
+      meter.append(head, track);
+      top.appendChild(meter);
+    }
+
+    const footer = document.createElement("div");
+    footer.className = "event-card-footer";
+    const statusText = document.createElement("strong");
+    statusText.textContent = ev.requiresApproval ? "Subject to approvals" : ev.fee;
+
+    const actions = document.createElement("div");
+    actions.className = "reg-actions";
+    const criteriaLink = document.createElement("a");
+    criteriaLink.className = "btn btn-secondary btn-sm";
+    criteriaLink.href = "event.html?id=" + ev.id;
+    criteriaLink.textContent = "Criteria";
+    actions.appendChild(criteriaLink);
+
+    if (ev.registrationOpen && !ev.requiresApproval) {
+      const regLink = document.createElement("a");
+      regLink.className = "btn btn-primary btn-sm";
+      regLink.href = ev.demoSlug ? "register.html?event=" + ev.demoSlug : "register.html";
+      regLink.textContent = "Register →";
+      actions.appendChild(regLink);
+    }
+
+    footer.append(statusText, actions);
+    article.append(top, footer);
+    return article;
+  }
+
+  function initHomeEvents() {
+    const grid = document.getElementById("home-events-grid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+    NCC_EVENTS.forEach((ev) => {
+      grid.appendChild(createEventCard(ev, false));
+    });
+
+    const countEl = document.getElementById("home-planned-count");
+    if (countEl) {
+      countEl.dataset.count = String(NCC_EVENTS.length);
+      countEl.textContent = String(NCC_EVENTS.length);
+    }
+
+    const exploreLink = document.getElementById("home-explore-events-link");
+    if (exploreLink) {
+      exploreLink.textContent = `Explore all ${NCC_EVENTS.length} events →`;
+    }
+
+    const demoOpenEl = document.getElementById("home-demo-open-count");
+    if (demoOpenEl) {
+      const openCount = NCC_EVENTS.filter((ev) => ev.registrationOpen && !ev.requiresApproval).length;
+      demoOpenEl.dataset.count = String(openCount);
+      demoOpenEl.textContent = String(openCount);
+    }
+  }
+
   function initEventsFilter() {
     const grid = document.getElementById("events-grid");
     if (!grid) return;
+
+    grid.innerHTML = "";
+    NCC_EVENTS.forEach((ev) => {
+      grid.appendChild(createEventCard(ev, true));
+    });
+
+    const allChip = document.querySelector('[data-day-filter="all"]');
+    if (allChip) allChip.textContent = `All Days (${NCC_EVENTS.length})`;
 
     const chips = document.querySelectorAll("[data-day-filter]");
     const search = document.getElementById("events-search");
@@ -279,7 +520,7 @@
       }, 180);
     }
 
-    // Update demo seats-left progress bars for demo-active categories (firing, drill)
+    // Update demo seats-left progress bars for demo-active categories
     let regs = [];
     try {
       regs = JSON.parse(localStorage.getItem("ncc_demo_regs_v1") || "[]").filter(
@@ -293,7 +534,7 @@
       const cap = Number(card.dataset.capacity || 30);
       const countEl = card.querySelector("[data-seats-text]");
       const barEl = card.querySelector("[data-seats-bar]");
-      if (slug && (slug === "firing" || slug === "drill")) {
+      if (slug && slug === "drill") {
         const taken = regs.filter((r) => r.event === slug).length;
         const left = Math.max(0, cap - taken);
         const pct = Math.min(100, Math.round((taken / cap) * 100));
@@ -329,128 +570,39 @@
 
   function initEventDetail() {
     if (document.body.dataset.page !== "event-detail") return;
-    const EVENTS = {
-      drill: {
-        badge: "Day 1 · Demo Open",
-        title: "Drill",
-        summary: "Precision foot drill and command execution judged on turnout, uniformity, and parade timing.",
-        date: "Day 1 · Date To be announced",
-        time: "09:30 IST (Tentative)",
-        venue: "College Parade Ground (TBA)",
-        type: "Squad / Individual",
-        fee: "Fee to be announced (Demo ₹400)",
-        status: "Demo Open",
-        capacity: 30,
-        demoSlug: "drill",
-        note: "Drill category rules and squad size are pending final committee confirmation.",
-        criteria: [
-          "Valid College ID and NCC enrollment check at reporting desk.",
-          "Complete NCC uniform turnout, polished footwear, and parade discipline.",
-          "Synchronisation, posture, and command clarity during squad inspection."
-        ]
-      },
-      firing: {
-        badge: "Day 2 · Subject to approvals",
-        title: "Firing (Subject to approvals)",
-        summary: "Proposed range activity. Firing is not confirmed and requires formal organiser and safety approval.",
-        date: "Day 2 · Date To be announced",
-        time: "11:00 IST (Subject to approvals)",
-        venue: "Authorised Range Facility (TBA)",
-        type: "Individual",
-        fee: "Fee to be announced (Demo ₹400)",
-        status: "Subject to approvals",
-        capacity: 25,
-        demoSlug: "firing",
-        note: "Firing is strictly subject to approvals from the unit and authorised safety officers.",
-        criteria: [
-          "Mandatory safety briefing and officer supervision before range entry.",
-          "Formal organiser and unit approval required prior to final scheduling.",
-          "Strict adherence to range discipline and zero-tolerance safety rules."
-        ]
-      },
-      quiz: {
-        badge: "Day 1 · Pending confirmation",
-        title: "NCC & Defence Quiz",
-        summary: "Written preliminary round followed by stage finals on NCC history, defence forces, and general awareness.",
-        date: "Day 1 · Date To be announced",
-        time: "13:30 IST (Tentative)",
-        venue: "College Auditorium (TBA)",
-        type: "Team (2 Cadets)",
-        fee: "Fee to be announced",
-        status: "Pending confirmation",
-        capacity: 40,
-        demoSlug: null,
-        note: "Quiz category registration opens after official organiser confirmation.",
-        criteria: [
-          "Teams of two cadets from the same unit or institution (pending confirmation).",
-          "Preliminary written screening round followed by top-team stage finals.",
-          "No electronic devices permitted during the written or stage rounds."
-        ]
-      },
-      "map-reading": {
-        badge: "Day 2 · Pending confirmation",
-        title: "Map Reading",
-        summary: "Practical field-craft test covering grid references, compass bearings, and route plotting.",
-        date: "Day 2 · Date To be announced",
-        time: "15:30 IST (Tentative)",
-        venue: "Training Ground / Field Area (TBA)",
-        type: "Individual / Pair",
-        fee: "Fee to be announced",
-        status: "Pending confirmation",
-        capacity: 35,
-        demoSlug: null,
-        note: "Map Reading equipment rules and reporting details are pending confirmation.",
-        criteria: [
-          "Ability to read 6-figure grid references and topographic map symbols.",
-          "Prismatic compass bearing and back-bearing accuracy under time limit.",
-          "Own basic stationery (pencil, scale, eraser) as directed by organisers."
-        ]
-      },
-      obstacle: {
-        badge: "Day 2 · Pending confirmation",
-        title: "Obstacle Course",
-        summary: "Timed physical agility circuit covering standard cadet obstacles under officer supervision.",
-        date: "Day 2 · Date To be announced",
-        time: "08:00 IST (Tentative)",
-        venue: "Obstacle Arena (TBA)",
-        type: "Individual",
-        fee: "Fee to be announced",
-        status: "Pending confirmation",
-        capacity: 40,
-        demoSlug: null,
-        note: "Medical fitness declaration and safety briefing are mandatory once confirmed.",
-        criteria: [
-          "Appropriate PT kit / sports footwear required for safety on the course.",
-          "Completion of all standard obstacles within the allotted time window.",
-          "Mandatory warm-up and medical clearance prior to starting."
-        ]
-      }
-    };
-
     const id = new URLSearchParams(window.location.search).get("id") || "drill";
-    const ev = EVENTS[id] || EVENTS.drill;
+    const ev = NCC_EVENTS.find((item) => item.id === id) || NCC_EVENTS[0];
 
     const setText = (elId, text) => {
       const el = document.getElementById(elId);
       if (el) el.textContent = text;
     };
 
-    setText("detail-badge", ev.badge);
-    setText("detail-title", ev.title);
+    setText("detail-badge", `Day ${ev.day} · ${ev.status}`);
+    setText("detail-title", ev.detailTitle || ev.title);
     setText("detail-summary", ev.summary);
     setText("detail-date", ev.date);
     setText("detail-time", ev.time);
     setText("detail-venue", ev.venue);
     setText("detail-type", ev.type);
-    setText("detail-fee", ev.fee);
+    setText("detail-fee", ev.demoSlug ? `${ev.fee} (Demo ₹400)` : ev.fee);
     setText("detail-status-pill", ev.status);
     setText("detail-approval-note", ev.note);
 
+    const canRegister = Boolean(ev.registrationOpen && !ev.requiresApproval);
     const regHref = ev.demoSlug ? "register.html?event=" + ev.demoSlug : "register.html";
     const btn1 = document.getElementById("detail-register-btn");
     const btn2 = document.getElementById("detail-mobile-register");
-    if (btn1) btn1.href = regHref;
-    if (btn2) btn2.href = regHref;
+    const mobileBar = document.querySelector(".sticky-mobile-cta");
+
+    if (canRegister) {
+      if (btn1) btn1.href = regHref;
+      if (btn2) btn2.href = regHref;
+    } else {
+      if (btn1) btn1.remove();
+      if (btn2) btn2.remove();
+      if (mobileBar) mobileBar.remove();
+    }
 
     if (ev.demoSlug) {
       let taken = 0;
@@ -501,6 +653,7 @@
     initPasswordToggles();
     initFaqAccordion();
     initCountdown();
+    initHomeEvents();
     initEventsFilter();
     initEventDetail();
   });

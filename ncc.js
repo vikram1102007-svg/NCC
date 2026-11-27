@@ -7,7 +7,7 @@ const K = {
 };
 const FEE = 400;
 const LABELS = { firing: "Firing", drill: "Drill" };
-const VALID_EVENTS = new Set(Object.keys(LABELS));
+const VALID_EVENTS = new Set(["drill"]);
 
 const $ = (id) => (typeof document !== "undefined" ? document.getElementById(id) : null);
 
@@ -160,9 +160,22 @@ function initRegister() {
 
   const params = new URLSearchParams(window.location.search);
   const preselected = params.get("event");
-  if (preselected && VALID_EVENTS.has(preselected)) {
+  const firingBox = document.querySelector('input[name="event"][value="firing"]');
+  if (firingBox) {
+    firingBox.checked = false;
+    firingBox.disabled = true;
+    const firingSmall = firingBox.closest("label")?.querySelector("small");
+    if (firingSmall) firingSmall.textContent = "Registration not open (subject to approvals)";
+  }
+  if (preselected === "firing") {
+    showMessage(
+      "register-msg",
+      "Firing registration is not open. This activity is subject to approvals.",
+      "error"
+    );
+  } else if (preselected && VALID_EVENTS.has(preselected)) {
     const box = document.querySelector('input[name="event"][value="' + preselected + '"]');
-    if (box) box.checked = true;
+    if (box && !box.disabled) box.checked = true;
   }
 
   const s = getSession();
@@ -180,7 +193,7 @@ function initRegister() {
     });
     if ($("register-title")) $("register-title").textContent = "Add demo event(s)";
     if ($("register-sub")) {
-      $("register-sub").textContent = "Select Firing or Drill to add to your active demo registrations.";
+      $("register-sub").textContent = "Select open demo category (Drill) to add to your active demo registrations.";
     }
     if ($("register-submit")) $("register-submit").textContent = "Add selected event(s) →";
     if ($("register-alt-link")) $("register-alt-link").classList.add("hidden");

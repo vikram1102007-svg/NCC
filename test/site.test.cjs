@@ -130,3 +130,42 @@ test("stylesheet includes responsive, focus-visible and reduced-motion support",
   assert.match(css, /focus-visible/i);
   assert.match(css, /prefers-reduced-motion/i);
 });
+
+test("firing event blocks registration in shared data, event detail, register page, and cards", () => {
+  const { NCC_EVENTS } = require("../scripts/ui.js");
+  const firing = NCC_EVENTS.find((ev) => ev.id === "firing");
+  assert.ok(firing);
+  assert.equal(firing.registrationOpen, false);
+  assert.equal(firing.requiresApproval, true);
+  assert.match(firing.note, /Registration is not open.*subject to approvals/i);
+
+  for (const ev of NCC_EVENTS.filter((item) => item.id !== "firing")) {
+    assert.equal(ev.registrationOpen, true);
+  }
+
+  // No card or page links directly to register.html?event=firing
+  assert.doesNotMatch(home, /register\.html\?event=firing/i);
+  assert.doesNotMatch(events, /register\.html\?event=firing/i);
+
+  // event.html logic removes register links when registrationOpen is false / requiresApproval is true
+  assert.match(uiScript, /if \(canRegister\) \{[\s\S]*\} else \{[\s\S]*btn1\.remove\(\)/);
+
+  // register.html disables firing and ncc.js blocks ?event=firing
+  assert.match(register, /id="event-firing"[^>]*disabled/);
+  assert.match(app, /preselected === "firing"/);
+  assert.doesNotMatch(app, /VALID_EVENTS\s*=\s*new Set\(Object\.keys\(LABELS\)\)/);
+});
+
+test("landing page renders all 5 events matching NCC_EVENTS count", () => {
+  const { NCC_EVENTS } = require("../scripts/ui.js");
+  assert.equal(NCC_EVENTS.length, 5);
+  const homeCards = home.match(/<article class="card card-hover event-card" data-event-card>/g) || [];
+  assert.equal(homeCards.length, NCC_EVENTS.length);
+  const countMatch = home.match(/id="home-planned-count"[^>]*>(\d+)<\/strong>/);
+  assert.ok(countMatch);
+  assert.equal(Number(countMatch[1]), homeCards.length);
+  assert.match(home, /Explore all 5 events/);
+  for (const ev of NCC_EVENTS) {
+    assert.ok(home.includes(`event.html?id=${ev.id}`), "missing home link for " + ev.id);
+  }
+});
