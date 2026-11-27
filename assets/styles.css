@@ -664,14 +664,47 @@ p {
   color: var(--warning);
 }
 
-.pill-success {
+.pill-success,
+.pill.paid {
   background: var(--success-bg);
   color: var(--success);
 }
 
-.pill-danger {
+.pill-danger,
+.pill.cancelled {
   background: var(--danger-bg);
   color: var(--danger);
+}
+
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--ink-900);
+  font: 700 13px var(--font-body);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.secondary:hover {
+  background: #f9faf8;
+  border-color: var(--navy-700);
+}
+
+.secondary.danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: #ebc2be;
+}
+
+.secondary.danger:hover {
+  background: var(--danger);
+  color: #ffffff;
 }
 
 /* Notices & Inline Messages */

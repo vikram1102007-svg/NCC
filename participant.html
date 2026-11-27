@@ -1,1 +1,127 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Demo Registrations | NCC</title><link rel="stylesheet" href="ncc.css"><script defer src="ncc.js"></script></head><body data-page="participant"><header class="top"><a class="brand" href="index.html"><span class="crest">N</span><span>NCC <small>CADET EVENT</small></span></a><nav><a href="index.html">Home</a><a href="events.html">Events</a><a href="register.html">Register</a><a href="login.html">Login</a><a href="participant.html">My Portal</a><a class="navadmin" href="admin.html">Admin demo</a></nav></header><main class="page"><section class="dash"><div class="dash-head"><div><p class="eyebrow dark">PARTICIPANT PORTAL · DEMO</p><h1 id="welcome">My registrations</h1><p class="sub" id="user-email"></p></div><button class="secondary" type="button" data-logout>Log out</button></div><div class="notice"><strong>DEMO MODE ONLY.</strong> Use fictional test details. This browser-only prototype is not secure, not shared across devices, and does not submit data to NCC. Do not enter real personal information, real passwords, or make payments.</div><div class="stats"><div class="stat"><span>Active categories</span><strong id="reg-count">0</strong></div><div class="stat"><span>Active demo total</span><strong id="reg-total">₹0</strong></div><div class="stat"><span>Demo fee each</span><strong>₹400</strong></div></div><div id="participant-msg" class="message" aria-live="polite"></div><div class="section-title"><h2>My <em>events</em></h2><div class="reg-actions"><a class="textlink" href="register.html">Add category →</a><a class="textlink" href="payment.html">Demo payment →</a></div></div><div id="my-registrations" class="participant-list"></div></section></main><footer><span>© NCC Cadet Event</span><span>Demo dashboard</span></footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d1b2a">
+  <title>My Demo Registrations | NCC Two-Day Event</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="scripts/ui.js"></script>
+  <script defer src="ncc.js"></script>
+</head>
+<body data-page="participant">
+  <a class="skip-link" href="#main-content">Skip to my registrations</a>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">
+        <span class="logo-slot" aria-label="College NCC logo placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2L20 6V12C20 16.97 16.58 20.93 12 22C7.42 20.93 4 16.97 4 12V6L12 2Z" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M12 7L13.5 10.5L17 11L14.3 13.4L15 17L12 15.1L9 17L9.7 13.4L7 11L10.5 10.5L12 7Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">NCC Two-Day Event</span>
+          <span class="brand-sub">College Unit · Placeholder Logo</span>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="events.html">Events</a>
+        <a class="nav-link" href="register.html">Register</a>
+        <a class="nav-link" href="login.html">Login</a>
+        <a class="nav-link" href="participant.html" aria-current="page">My Portal</a>
+        <a class="nav-admin" href="admin.html">Admin Demo</a>
+      </nav>
+    </div>
+  </header>
+  <div class="nav-backdrop" aria-hidden="true"></div>
+
+  <main id="main-content" class="page-shell">
+    <div class="container">
+      <section class="card" style="background:linear-gradient(120deg,var(--navy-900),var(--navy-800));color:#fff;margin-bottom:24px">
+        <div class="dash-header" style="margin-bottom:0">
+          <div>
+            <p class="eyebrow eyebrow--gold"><span class="eyebrow-dot"></span> Participant Portal · Demo</p>
+            <h1 id="welcome" style="color:#fff">My registrations</h1>
+            <p id="user-email" style="color:var(--ink-on-dark-muted);font-size:14px;margin-top:4px"></p>
+          </div>
+          <div class="reg-actions">
+            <a class="btn btn-primary btn-sm" href="register.html">+ Add category</a>
+            <button class="btn btn-ghost btn-sm" type="button" data-logout>Log out</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="notice notice-warning">
+        <strong>DEMO MODE ONLY.</strong> Use fictional test details. This browser-only prototype is not secure, not shared across devices, and does not submit data to NCC. Do not enter real personal information, real passwords, or make payments.
+      </div>
+
+      <div class="stats-grid" style="margin-top:20px">
+        <div class="stat-card">
+          <span>Active Categories</span>
+          <strong id="reg-count">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Active Demo Total</span>
+          <strong id="reg-total">₹0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Demo Fee Each</span>
+          <strong>₹400</strong>
+        </div>
+      </div>
+
+      <div id="participant-msg" class="message" aria-live="polite"></div>
+
+      <div class="section-head" style="margin-bottom:16px">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-dot"></span> Enrolment Status</p>
+          <h2 style="font-size:32px">My <em>Events</em></h2>
+        </div>
+        <div class="reg-actions">
+          <a class="btn btn-secondary btn-sm" href="register.html">Add category →</a>
+          <a class="btn btn-primary btn-sm" href="payment.html">Demo payment →</a>
+        </div>
+      </div>
+
+      <div id="my-registrations" class="participant-list"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <p class="footer-title">College NCC Two-Day Event</p>
+          <p class="footer-copy">Organised by the College NCC Unit. Event details, official dates, and logos are placeholders until formally approved.</p>
+        </div>
+        <div>
+          <p class="footer-title">Quick Links</p>
+          <ul class="footer-links">
+            <li><a href="index.html">Home &amp; Schedule</a></li>
+            <li><a href="events.html">Events &amp; Criteria</a></li>
+            <li><a href="register.html">Demo Registration</a></li>
+            <li><a href="admin.html">Organiser Admin Demo</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-title">Unit Contact (Placeholder)</p>
+          <ul class="footer-links">
+            <li>Parade Ground, College Campus</li>
+            <li>Email: ncc-unit@college.example</li>
+            <li>Demo dashboard</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> College NCC Event Demo</span>
+        <span>Demo dashboard · browser storage only</span>
+      </div>
+    </div>
+  </footer>
+  <button id="back-to-top" class="back-to-top" type="button" aria-label="Back to top">↑</button>
+</body>
+</html>
