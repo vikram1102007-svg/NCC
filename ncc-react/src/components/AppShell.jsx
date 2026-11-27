@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUp, CalendarDays, ClipboardCheck, Home, Shield, User } from "lucide-react";
 import { Store } from "../lib/store";
-import AnimatedBackground from "./AnimatedBackground";
+import ParticleBackground from "./ParticleBackground";
 import SplashIntro from "./SplashIntro";
 
 const MOBILE_TABS = [
@@ -33,7 +33,7 @@ export default function AppShell({ children }) {
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col">
-      <AnimatedBackground />
+      <ParticleBackground />
       <SplashIntro />
 
       <a

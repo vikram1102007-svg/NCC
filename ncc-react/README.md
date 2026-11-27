@@ -27,7 +27,7 @@ npm run preview
 
 All motion uses GPU-composited `transform` and `opacity` and automatically honors `prefers-reduced-motion`:
 
-- **Gradient Aurora & Parallax Particles**: `src/components/AnimatedBackground.jsx` — adjust `duration` (currently `18`–`26s`), blur radius (`blur-3xl`), or opacity (`/15`) on the orb divs and `PARTICLES` array.
+- **Interactive Particle Canvas**: `src/components/ParticleBackground.jsx` — full-screen fixed `<canvas>` (`z-index: -1`, `pointer-events: none`) drawing gold & olive dots/dashes over navy with 60fps cap, `devicePixelRatio` scaling, pointer/touch repulsion, `visibilitychange` pause, and static rendering when `prefers-reduced-motion` is enabled. Adjust `getTargetCount`, `speed`, `radius`, and `maxPush` directly in `ParticleBackground.jsx`.
 - **Splash Crest Intro (0.95s once per session)**: `src/components/SplashIntro.jsx` — adjust `950` ms timeout or `duration: 0.45`.
 - **Page Transitions**: `src/App.jsx` (`PageTransition` component) — adjust `duration: 0.22` and `y: 10`.
 - **Scroll Reveal & Card Hover**: `src/components/GlassCard.jsx` — adjust `duration: 0.42`, `viewport.amount`, or `whileHover={{ y: -4 }}`.

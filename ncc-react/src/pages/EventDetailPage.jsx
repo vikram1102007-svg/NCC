@@ -25,7 +25,7 @@ export default function EventDetailPage() {
 
   return (
     <div className="pb-20 md:pb-0">
-      <section className="bg-gradient-to-br from-[#08121e] to-[#14283e] py-10 text-white sm:py-14">
+      <section className="border-b border-white/10 bg-[#08121e]/50 py-10 text-white sm:py-14">
         <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
           <Link
             to="/events"

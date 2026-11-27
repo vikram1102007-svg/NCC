@@ -257,8 +257,8 @@ export default function AdminPage({ onToast, onConfirm }) {
             onClick={() => setTab(t.id)}
             className={`min-h-[44px] rounded-md px-4 py-2 text-xs font-bold uppercase tracking-wider ${
               tab === t.id
-                ? "bg-[#0d1b2a] text-white"
-                : "border border-slate-300 bg-white text-[#102030]"
+                ? "bg-[#d9a742] text-[#08121e]"
+                : "border border-white/25 bg-white/10 text-white hover:bg-white/15"
             }`}
           >
             {t.label}

@@ -55,7 +55,7 @@ export default function HomePage() {
   return (
     <div>
       {/* Mobile-first Hero (min-h uses dvh-safe proportions) */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#08121e] via-[#0d1b2a] to-[#14283e] py-12 text-white sm:py-20">
+      <section className="relative overflow-hidden bg-[#08121e]/45 py-12 text-white sm:py-20">
         <div
           className="pointer-events-none absolute inset-0 opacity-20"
           style={{
@@ -203,7 +203,7 @@ export default function HomePage() {
       </section>
 
       {/* Two-Day Schedule loaded directly from Store */}
-      <section className="bg-[#0d1b2a] py-14 text-white">
+      <section className="border-y border-white/10 bg-[#0d1b2a]/70 py-14 text-white backdrop-blur-sm">
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -284,11 +284,11 @@ export default function HomePage() {
 
       {/* 3-Step Registration Guide */}
       <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#4b5c34]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#e7bc62]">
           Cadet Onboarding
         </p>
-        <h2 className="mt-1 font-display text-4xl font-extrabold uppercase text-[#0d1b2a]">
-          How to <span className="text-[#b88422]">Register</span>
+        <h2 className="mt-1 font-display text-4xl font-extrabold uppercase text-white">
+          How to <span className="text-[#e7bc62]">Register</span>
         </h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {[
@@ -323,10 +323,10 @@ export default function HomePage() {
       <section className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#4b5c34]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#e7bc62]">
               Briefing &amp; FAQ
             </p>
-            <h2 className="mt-1 font-display text-3xl font-extrabold uppercase text-[#0d1b2a]">
+            <h2 className="mt-1 font-display text-3xl font-extrabold uppercase text-white">
               Frequently Asked Questions
             </h2>
             <div className="mt-4 grid gap-3">

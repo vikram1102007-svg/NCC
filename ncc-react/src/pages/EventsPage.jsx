@@ -30,13 +30,13 @@ export default function EventsPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#4b5c34]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#e7bc62]">
             Event Directory
           </p>
-          <h1 className="mt-1 font-display text-4xl font-extrabold uppercase text-[#0d1b2a] sm:text-5xl">
-            Two-Day <span className="text-[#b88422]">Categories</span>
+          <h1 className="mt-1 font-display text-4xl font-extrabold uppercase text-white sm:text-5xl">
+            Two-Day <span className="text-[#e7bc62]">Categories</span>
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-[#4a5a6b]">
+          <p className="mt-2 max-w-2xl text-sm text-slate-300">
             Filter by Day 1 or Day 2, inspect eligibility criteria, and register. Firing remains strictly subject to approvals.
           </p>
         </div>
@@ -64,13 +64,15 @@ export default function EventsPage() {
                 onClick={() => setDayFilter(chip.id)}
                 aria-pressed={active}
                 className={`relative min-h-[44px] rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
-                  active ? "text-white" : "border border-slate-300 bg-white/85 text-[#102030]"
+                  active
+                    ? "text-[#08121e]"
+                    : "border border-white/25 bg-white/10 text-white hover:bg-white/15"
                 }`}
               >
                 {active && (
                   <motion.span
                     layoutId="events-day-pill"
-                    className="absolute inset-0 rounded-full bg-[#0d1b2a]"
+                    className="absolute inset-0 rounded-full bg-[#d9a742]"
                   />
                 )}
                 <span className="relative z-10">{chip.label}</span>
@@ -107,7 +109,7 @@ export default function EventsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-slate-300 bg-white/75 p-10 text-center text-sm text-[#4a5a6b]">
+        <div className="mt-8 rounded-xl border border-dashed border-white/30 bg-white/10 p-10 text-center text-sm text-slate-200">
           No events match your current search or day filter.
         </div>
       ) : (

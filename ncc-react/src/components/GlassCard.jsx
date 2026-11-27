@@ -16,7 +16,7 @@ export default function GlassCard({
       viewport={{ once: true, amount: 0.05 }}
       transition={{ duration: 0.36, delay, ease: [0.22, 1, 0.36, 1] }}
       whileHover={hover && !reduced ? { y: -4 } : undefined}
-      className={`rounded-xl border border-white/70 bg-white/85 p-5 shadow-[0_8px_30px_rgba(8,18,30,0.07)] backdrop-blur-md transition-colors sm:p-6 ${className}`}
+      className={`rounded-xl border border-white/80 bg-white/95 p-5 text-[#102030] shadow-[0_12px_34px_rgba(4,10,18,0.28)] backdrop-blur-md transition-colors sm:p-6 ${className}`}
     >
       {children}
     </motion.div>
