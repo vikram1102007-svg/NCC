@@ -258,6 +258,74 @@
     });
   }
 
+  function initEventsFilter() {
+    const grid = document.getElementById("events-grid");
+    if (!grid) return;
+
+    const chips = document.querySelectorAll("[data-day-filter]");
+    const search = document.getElementById("events-search");
+    const empty = document.getElementById("events-empty");
+    const skeleton = document.getElementById("events-skeleton");
+    const cards = [...grid.querySelectorAll("[data-event-card]")];
+
+    // Show brief skeleton loading state for smooth polish (skipped when reduced motion)
+    if (skeleton && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      skeleton.classList.remove("hidden");
+      grid.classList.add("hidden");
+      setTimeout(() => {
+        skeleton.classList.add("hidden");
+        grid.classList.remove("hidden");
+      }, 180);
+    }
+
+    // Update demo seats-left progress bars for demo-active categories (firing, drill)
+    let regs = [];
+    try {
+      regs = JSON.parse(localStorage.getItem("ncc_demo_regs_v1") || "[]").filter(
+        (r) => r.status !== "Cancelled"
+      );
+    } catch {
+      regs = [];
+    }
+    cards.forEach((card) => {
+      const slug = card.dataset.eventSlug;
+      const cap = Number(card.dataset.capacity || 30);
+      const countEl = card.querySelector("[data-seats-text]");
+      const barEl = card.querySelector("[data-seats-bar]");
+      if (slug && (slug === "firing" || slug === "drill")) {
+        const taken = regs.filter((r) => r.event === slug).length;
+        const left = Math.max(0, cap - taken);
+        const pct = Math.min(100, Math.round((taken / cap) * 100));
+        if (countEl) countEl.textContent = `${left} of ${cap} demo slots left`;
+        if (barEl) barEl.style.width = `${Math.max(8, pct)}%`;
+      }
+    });
+
+    let activeDay = "all";
+    const applyFilter = () => {
+      const q = (search?.value || "").trim().toLowerCase();
+      let visible = 0;
+      cards.forEach((card) => {
+        const dayMatch = activeDay === "all" || card.dataset.day === activeDay;
+        const textMatch = !q || card.textContent.toLowerCase().includes(q);
+        const show = dayMatch && textMatch;
+        card.classList.toggle("hidden", !show);
+        if (show) visible += 1;
+      });
+      if (empty) empty.classList.toggle("hidden", visible > 0);
+    };
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        activeDay = chip.dataset.dayFilter || "all";
+        chips.forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+        applyFilter();
+      });
+    });
+
+    search?.addEventListener("input", applyFilter);
+  }
+
   window.NCCUI = {
     showToast,
     confirmModal,
@@ -274,5 +342,6 @@
     initPasswordToggles();
     initFaqAccordion();
     initCountdown();
+    initEventsFilter();
   });
 })();

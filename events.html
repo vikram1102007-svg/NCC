@@ -1,1 +1,228 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event Details | NCC</title><link rel="stylesheet" href="ncc.css"><script defer src="ncc.js"></script></head><body><header class="top"><a class="brand" href="index.html"><span class="crest">N</span><span>NCC <small>CADET EVENT</small></span></a><nav><a href="index.html">Home</a><a href="register.html">Register</a><a href="login.html">Login</a><a href="participant.html">My Portal</a><a class="navadmin" href="admin.html">Admin demo</a></nav></header><main class="page"><section class="form-card"><p class="eyebrow dark">EVENT CATEGORIES</p><h1>Event details</h1><p class="sub">Select one or both categories. Official categories and any fee are pending organiser approval; demo mode uses sample ₹400 labels.</p><div class="cards"><article class="event-card"><span class="tag">CATEGORY 01</span><h3>Firing</h3><p>Firing is not confirmed. Any such activity requires formal organiser and safety approval.</p><div class="card-bottom"><strong>Fee TBA</strong><a href="register.html?event=firing">Register →</a></div></article><article class="event-card"><span class="tag">CATEGORY 02</span><h3>Drill</h3><p>The drill category and its rules are pending organiser confirmation.</p><div class="card-bottom"><strong>Fee TBA</strong><a href="register.html?event=drill">Register →</a></div></article></div><div class="notice">Event date, venue and final participation rules are pending official confirmation. No payment gateway is connected on this demo site.</div><a class="btn gold" href="register.html">Start registration →</a></section></main><footer><span>© NCC Cadet Event</span><span>Dates and venue TBA · Demo mode available</span></footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d1b2a">
+  <title>Event Details | NCC Two-Day Event</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="scripts/ui.js"></script>
+  <script defer src="ncc.js"></script>
+</head>
+<body data-page="events">
+  <a class="skip-link" href="#main-content">Skip to events</a>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">
+        <span class="logo-slot" aria-label="College NCC logo placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2L20 6V12C20 16.97 16.58 20.93 12 22C7.42 20.93 4 16.97 4 12V6L12 2Z" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M12 7L13.5 10.5L17 11L14.3 13.4L15 17L12 15.1L9 17L9.7 13.4L7 11L10.5 10.5L12 7Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">NCC Two-Day Event</span>
+          <span class="brand-sub">College Unit · Placeholder Logo</span>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="events.html" aria-current="page">Events</a>
+        <a class="nav-link" href="register.html">Register</a>
+        <a class="nav-link" href="login.html">Login</a>
+        <a class="nav-link" href="participant.html">My Portal</a>
+        <a class="nav-admin" href="admin.html">Admin Demo</a>
+      </nav>
+    </div>
+  </header>
+  <div class="nav-backdrop" aria-hidden="true"></div>
+
+  <main id="main-content" class="page-shell">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-dot"></span> Event Directory</p>
+          <h1>Event <em>Categories</em></h1>
+          <p class="section-lead" style="margin-top:8px">
+            Browse all planned two-day NCC events. Official dates, venue, and fees are TBA and pending organiser approval; demo registration is active for Firing (subject to approvals) and Drill.
+          </p>
+        </div>
+        <a class="btn btn-primary" href="register.html">Start registration →</a>
+      </div>
+
+      <div class="filter-bar">
+        <div class="chip-group" role="group" aria-label="Filter events by day">
+          <button class="filter-chip" type="button" data-day-filter="all" aria-pressed="true">All Days (5)</button>
+          <button class="filter-chip" type="button" data-day-filter="1" aria-pressed="false">Day 1</button>
+          <button class="filter-chip" type="button" data-day-filter="2" aria-pressed="false">Day 2</button>
+        </div>
+        <div class="field search-input" style="margin-bottom:0">
+          <label class="sr-only" for="events-search">Search events</label>
+          <input id="events-search" type="search" placeholder="Search drill, firing, quiz, map...">
+        </div>
+      </div>
+
+      <div id="events-skeleton" class="events-grid hidden" aria-hidden="true">
+        <div class="card"><div class="skeleton" style="height:22px;width:90px;margin-bottom:12px"></div><div class="skeleton" style="height:28px;width:65%;margin-bottom:12px"></div><div class="skeleton" style="height:56px;width:100%"></div></div>
+        <div class="card"><div class="skeleton" style="height:22px;width:90px;margin-bottom:12px"></div><div class="skeleton" style="height:28px;width:65%;margin-bottom:12px"></div><div class="skeleton" style="height:56px;width:100%"></div></div>
+        <div class="card"><div class="skeleton" style="height:22px;width:90px;margin-bottom:12px"></div><div class="skeleton" style="height:28px;width:65%;margin-bottom:12px"></div><div class="skeleton" style="height:56px;width:100%"></div></div>
+      </div>
+
+      <div id="events-grid" class="events-grid">
+        <article id="drill" class="card card-hover event-card" data-event-card data-day="1" data-event-slug="drill" data-capacity="30">
+          <div>
+            <div class="reg-actions" style="justify-content:space-between">
+              <span class="pill pill-navy">Day 1</span>
+              <span class="pill pill-olive">Squad / Individual</span>
+            </div>
+            <h3>Drill</h3>
+            <p>Precision foot drill and command assessment judged on turnout, uniformity, and timing. Final rules are pending organiser confirmation.</p>
+            <div class="seat-meter">
+              <div class="seat-meter-head">
+                <span data-seats-text>30 of 30 demo slots left</span>
+                <span>Fee TBA</span>
+              </div>
+              <div class="seat-track"><div class="seat-fill" data-seats-bar style="width:12%"></div></div>
+            </div>
+          </div>
+          <div class="event-card-footer">
+            <strong>Demo Open</strong>
+            <a class="btn btn-primary btn-sm" href="register.html?event=drill">Register →</a>
+          </div>
+        </article>
+
+        <article id="firing" class="card card-hover event-card" data-event-card data-day="2" data-event-slug="firing" data-capacity="25">
+          <div>
+            <div class="reg-actions" style="justify-content:space-between">
+              <span class="pill pill-navy">Day 2</span>
+              <span class="pill pill-gold">Subject to approvals</span>
+            </div>
+            <h3>Firing</h3>
+            <p>Firing is not confirmed. Any range activity requires formal organiser and safety approval before final scheduling.</p>
+            <div class="seat-meter">
+              <div class="seat-meter-head">
+                <span data-seats-text>25 of 25 demo slots left</span>
+                <span>Fee TBA</span>
+              </div>
+              <div class="seat-track"><div class="seat-fill" data-seats-bar style="width:10%"></div></div>
+            </div>
+          </div>
+          <div class="event-card-footer">
+            <strong>Subject to approvals</strong>
+            <a class="btn btn-primary btn-sm" href="register.html?event=firing">Register →</a>
+          </div>
+        </article>
+
+        <article id="quiz" class="card card-hover event-card" data-event-card data-day="1" data-event-slug="quiz" data-capacity="40">
+          <div>
+            <div class="reg-actions" style="justify-content:space-between">
+              <span class="pill pill-navy">Day 1</span>
+              <span class="pill pill-olive">Team (2 Cadets)</span>
+            </div>
+            <h3>NCC &amp; Defence Quiz</h3>
+            <p>Written preliminary round followed by stage finals on NCC history, Indian defence forces, and general awareness.</p>
+            <div class="seat-meter">
+              <div class="seat-meter-head">
+                <span>Capacity TBA</span>
+                <span>Fee TBA</span>
+              </div>
+              <div class="seat-track"><div class="seat-fill" style="width:8%"></div></div>
+            </div>
+          </div>
+          <div class="event-card-footer">
+            <span class="pill">Pending confirmation</span>
+            <a class="btn btn-secondary btn-sm" href="register.html">Join Demo</a>
+          </div>
+        </article>
+
+        <article id="map-reading" class="card card-hover event-card" data-event-card data-day="2" data-event-slug="map-reading" data-capacity="35">
+          <div>
+            <div class="reg-actions" style="justify-content:space-between">
+              <span class="pill pill-navy">Day 2</span>
+              <span class="pill pill-olive">Individual / Pair</span>
+            </div>
+            <h3>Map Reading</h3>
+            <p>Practical assessment of grid references, compass bearings, conventional signs, and route navigation.</p>
+            <div class="seat-meter">
+              <div class="seat-meter-head">
+                <span>Capacity TBA</span>
+                <span>Fee TBA</span>
+              </div>
+              <div class="seat-track"><div class="seat-fill" style="width:8%"></div></div>
+            </div>
+          </div>
+          <div class="event-card-footer">
+            <span class="pill">Pending confirmation</span>
+            <a class="btn btn-secondary btn-sm" href="register.html">Join Demo</a>
+          </div>
+        </article>
+
+        <article id="obstacle" class="card card-hover event-card" data-event-card data-day="2" data-event-slug="obstacle" data-capacity="40">
+          <div>
+            <div class="reg-actions" style="justify-content:space-between">
+              <span class="pill pill-navy">Day 2</span>
+              <span class="pill pill-olive">Individual</span>
+            </div>
+            <h3>Obstacle Course</h3>
+            <p>Timed physical agility circuit covering standard cadet obstacles under officer supervision.</p>
+            <div class="seat-meter">
+              <div class="seat-meter-head">
+                <span>Capacity TBA</span>
+                <span>Fee TBA</span>
+              </div>
+              <div class="seat-track"><div class="seat-fill" style="width:8%"></div></div>
+            </div>
+          </div>
+          <div class="event-card-footer">
+            <span class="pill">Pending confirmation</span>
+            <a class="btn btn-secondary btn-sm" href="register.html">Join Demo</a>
+          </div>
+        </article>
+      </div>
+
+      <div id="events-empty" class="empty-state hidden" style="margin-top:24px">
+        No events match that search or day filter. Try clearing the search box.
+      </div>
+
+      <div class="notice notice-warning" style="margin-top:32px">
+        <strong>Organiser confirmation pending:</strong> Event dates, venue, and final participation rules are pending official confirmation. No payment gateway is connected on this demo site.
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <p class="footer-title">College NCC Two-Day Event</p>
+          <p class="footer-copy">Organised by the College NCC Unit. Event details, official dates, and logos are placeholders until formally approved.</p>
+        </div>
+        <div>
+          <p class="footer-title">Quick Links</p>
+          <ul class="footer-links">
+            <li><a href="index.html">Home &amp; Schedule</a></li>
+            <li><a href="register.html">Demo Registration</a></li>
+            <li><a href="participant.html">Participant Portal</a></li>
+            <li><a href="admin.html">Organiser Admin Demo</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-title">Unit Contact (Placeholder)</p>
+          <ul class="footer-links">
+            <li>Parade Ground, College Campus</li>
+            <li>Email: ncc-unit@college.example</li>
+            <li>Dates and venue TBA</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> College NCC Event Demo</span>
+        <span>Dates and venue TBA</span>
+      </div>
+    </div>
+  </footer>
+  <button id="back-to-top" class="back-to-top" type="button" aria-label="Back to top">↑</button>
+</body>
+</html>
