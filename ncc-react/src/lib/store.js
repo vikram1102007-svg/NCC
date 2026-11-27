@@ -1,4 +1,4 @@
-import { isSupabaseConfigured } from "./supabaseConfig";
+import { isSupabaseConfigured } from "./supabaseConfig.js";
 
 // Demo Mode storage keys (isolated from any live Supabase data)
 const KEYS = {

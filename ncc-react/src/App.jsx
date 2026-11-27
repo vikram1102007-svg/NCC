@@ -9,8 +9,10 @@ import EventsPage from "./pages/EventsPage";
 import EventDetailPage from "./pages/EventDetailPage";
 import AuthPage from "./pages/AuthPage";
 import ParticipantPage from "./pages/ParticipantPage";
+import PaymentPage from "./pages/PaymentPage";
 import AdminPage from "./pages/AdminPage";
 import CertificatePage from "./pages/CertificatePage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function PageTransition({ children }) {
   return (
@@ -79,6 +81,14 @@ function AnimatedRoutes({ onToast, onConfirm }) {
           }
         />
         <Route
+          path="/payment"
+          element={
+            <PageTransition>
+              <PaymentPage onToast={onToast} />
+            </PageTransition>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <PageTransition>
@@ -91,6 +101,14 @@ function AnimatedRoutes({ onToast, onConfirm }) {
           element={
             <PageTransition>
               <CertificatePage />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <PageTransition>
+              <NotFoundPage />
             </PageTransition>
           }
         />

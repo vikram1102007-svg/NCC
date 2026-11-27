@@ -29,7 +29,8 @@ export default function AdminPage({ onToast, onConfirm }) {
   const stats = useMemo(() => computeStats(regs), [regs]);
   const [settingsForm, setSettingsForm] = useState(() => Store.getSettings());
 
-  const [newEvent, setNewEvent] = useState({
+  const blankEvent = {
+    id: "",
     title: "",
     day: 1,
     time: "10:00 IST (TBA)",
@@ -40,7 +41,8 @@ export default function AdminPage({ onToast, onConfirm }) {
     subjectToApprovals: false,
     description: "",
     criteriaText: "Valid College ID required\nReport 30 minutes prior"
-  });
+  };
+  const [newEvent, setNewEvent] = useState(blankEvent);
 
   const filteredRegs = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -105,10 +107,11 @@ export default function AdminPage({ onToast, onConfirm }) {
   const handleSaveEvent = (e) => {
     e.preventDefault();
     if (!newEvent.title.trim()) return;
+    const isEditing = Boolean(newEvent.id);
     Store.saveEvent(newEvent);
-    setNewEvent((p) => ({ ...p, title: "", description: "" }));
+    setNewEvent(blankEvent);
     setTick((t) => t + 1);
-    onToast("Saved event to Demo Store.", "success");
+    onToast(isEditing ? "Updated event in Demo Store." : "Added event to Demo Store.", "success");
   };
 
   const handleDeleteEvent = async (ev) => {
@@ -407,7 +410,20 @@ export default function AdminPage({ onToast, onConfirm }) {
       {tab === "events" && (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <GlassCard>
-            <h2 className="font-display text-2xl font-extrabold text-[#0d1b2a]">Add Demo Event</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-2xl font-extrabold text-[#0d1b2a]">
+                {newEvent.id ? `Edit Event: ${newEvent.title}` : "Add Demo Event"}
+              </h2>
+              {newEvent.id && (
+                <button
+                  type="button"
+                  onClick={() => setNewEvent(blankEvent)}
+                  className="text-xs font-bold text-[#4b5c34] underline"
+                >
+                  Cancel edit
+                </button>
+              )}
+            </div>
             <form onSubmit={handleSaveEvent} className="mt-4 grid gap-3">
               <input
                 required
@@ -416,6 +432,20 @@ export default function AdminPage({ onToast, onConfirm }) {
                 onChange={(e) => setNewEvent((p) => ({ ...p, title: e.target.value }))}
                 className="min-h-[44px] rounded-md border border-slate-300 bg-white px-3 text-sm"
               />
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  value={newEvent.time}
+                  onChange={(e) => setNewEvent((p) => ({ ...p, time: e.target.value }))}
+                  placeholder="Time (e.g. 10:00 IST)"
+                  className="min-h-[44px] rounded-md border border-slate-300 bg-white px-3 text-sm"
+                />
+                <input
+                  value={newEvent.venue}
+                  onChange={(e) => setNewEvent((p) => ({ ...p, venue: e.target.value }))}
+                  placeholder="Venue"
+                  className="min-h-[44px] rounded-md border border-slate-300 bg-white px-3 text-sm"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <select
                   value={newEvent.day}
@@ -452,6 +482,17 @@ export default function AdminPage({ onToast, onConfirm }) {
                   className="min-h-[44px] rounded-md border border-slate-300 bg-white px-3 text-sm"
                 />
               </div>
+              <label className="flex items-center gap-2 text-xs font-semibold text-[#2b3c4d]">
+                <input
+                  type="checkbox"
+                  checked={Boolean(newEvent.subjectToApprovals)}
+                  onChange={(e) =>
+                    setNewEvent((p) => ({ ...p, subjectToApprovals: e.target.checked }))
+                  }
+                  className="h-4 w-4 accent-[#0d1b2a]"
+                />
+                Mark as &ldquo;Subject to approvals&rdquo;
+              </label>
               <textarea
                 rows={2}
                 placeholder="Short description"
@@ -459,11 +500,18 @@ export default function AdminPage({ onToast, onConfirm }) {
                 onChange={(e) => setNewEvent((p) => ({ ...p, description: e.target.value }))}
                 className="rounded-md border border-slate-300 bg-white p-3 text-sm"
               />
+              <textarea
+                rows={3}
+                placeholder="Criteria checklist (one item per line)"
+                value={newEvent.criteriaText}
+                onChange={(e) => setNewEvent((p) => ({ ...p, criteriaText: e.target.value }))}
+                className="rounded-md border border-slate-300 bg-white p-3 text-sm"
+              />
               <button
                 type="submit"
                 className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-md bg-[#d9a742] px-4 py-2 text-sm font-bold text-[#08121e]"
               >
-                <Plus className="h-4 w-4" /> Add Event
+                <Plus className="h-4 w-4" /> {newEvent.id ? "Save Changes" : "Add Event"}
               </button>
             </form>
           </GlassCard>
@@ -477,13 +525,36 @@ export default function AdminPage({ onToast, onConfirm }) {
                     Day {ev.day} · {ev.type} · {ev.seatsLeft}/{ev.capacity} left
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteEvent(ev)}
-                  className="min-h-[40px] rounded border border-[#ebc2be] bg-[#fceceb] px-3 py-1.5 text-xs font-bold text-[#a62b21]"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setNewEvent({
+                        id: ev.id,
+                        title: ev.title,
+                        day: ev.day,
+                        time: ev.time,
+                        venue: ev.venue,
+                        type: ev.type,
+                        capacity: ev.capacity,
+                        fee: ev.fee,
+                        subjectToApprovals: Boolean(ev.subjectToApprovals),
+                        description: ev.description,
+                        criteriaText: (ev.criteria || []).join("\n")
+                      })
+                    }
+                    className="min-h-[40px] rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-[#102030]"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteEvent(ev)}
+                    className="min-h-[40px] rounded border border-[#ebc2be] bg-[#fceceb] px-3 py-1.5 text-xs font-bold text-[#a62b21]"
+                  >
+                    Delete
+                  </button>
+                </div>
               </GlassCard>
             ))}
           </div>

@@ -147,6 +147,12 @@ export default function ParticipantPage({ onToast, onConfirm }) {
           >
             <PlusCircle className="h-4 w-4" /> Add Event
           </Link>
+          <Link
+            to="/payment"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-white/30 px-4 py-2 text-xs font-bold text-white hover:bg-white/10"
+          >
+            <CreditCard className="h-4 w-4" /> Demo Payment
+          </Link>
           <button
             type="button"
             onClick={() => {
@@ -159,6 +165,10 @@ export default function ParticipantPage({ onToast, onConfirm }) {
             <LogOut className="h-4 w-4" /> Log out
           </button>
         </div>
+      </div>
+
+      <div className="mt-4 rounded-md border-l-4 border-[#b88422] bg-[#fdf5e2] p-3 text-xs text-[#5c400b]">
+        <strong>DEMO MODE ONLY.</strong> Registrations, QR passes, payment statuses, and certificates shown here are stored locally in your browser and are not connected to live Supabase storage.
       </div>
 
       {/* Stats */}
