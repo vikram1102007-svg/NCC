@@ -1,13 +1,29 @@
 {
   "name": "ncc-two-day-event",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "Public information site and gated registration foundation for a two-day college NCC event",
+  "description": "KPR Institute of Engineering and Technology (KPRIET) NCC Two-Day Event registration, QR check-in, and certificate portal",
   "scripts": {
-    "test": "node --test",
-    "check": "node --check ncc.js && node --check scripts/ui.js && node --check scripts/app.js && node --check supabase/functions/_shared/registration-validation.mjs && node --test"
+    "start": "node scripts/dev-server.js",
+    "seed": "node scripts/seed.js",
+    "backup": "node scripts/backup.js",
+    "loadtest": "node scripts/loadtest.js",
+    "test": "node --test test/api.test.cjs test/site.test.cjs",
+    "check": "node --check api/index.js && node --check lib/db.js && node --check lib/auth.js && node --check lib/validate.js && node --check ncc.js && node --check scripts/ui.js && npm test"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.0.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.4.0"
   }
 }
