@@ -1,6 +1,6 @@
 // Presentation-only UI helpers + global crash guard (zero data storage here).
 (function () {
-  function showGlobalFallbackError(detail) {
+  function showGlobalFallbackError(detail, code = "") {
     try {
       const main = document.querySelector("#main-content") || document.body;
       if (!main || document.querySelector("#ncc-global-error")) return;
@@ -12,18 +12,33 @@
       const h = document.createElement("h2");
       h.textContent = "Unable to display this view";
       const p = document.createElement("p");
-      p.style.margin = "8px 0 18px";
+      p.style.margin = "8px 0 10px";
       p.style.color = "var(--ink-600)";
       p.textContent =
         detail ||
-        "A network or browser script problem interrupted loading. Tap Reload to try again.";
+        "A network or server problem interrupted loading. Tap Reload to try again.";
+
+      if (code) {
+        const codeTag = document.createElement("p");
+        codeTag.className = "error-code-badge";
+        codeTag.style.margin = "0 0 18px";
+        codeTag.style.fontFamily = "monospace";
+        codeTag.style.fontSize = "12px";
+        codeTag.style.color = "var(--danger)";
+        codeTag.textContent = `Error code: ${code}`;
+        box.append(h, p, codeTag);
+      } else {
+        p.style.margin = "8px 0 18px";
+        box.append(h, p);
+      }
+
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "btn btn-primary";
       btn.textContent = "Reload Page";
       btn.addEventListener("click", () => window.location.reload());
 
-      box.append(h, p, btn);
+      box.append(btn);
       main.prepend(box);
     } catch {
       // Never throw inside fallback handler

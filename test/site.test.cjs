@@ -50,6 +50,11 @@ test("frontend scripts remove localStorage data storage and handle errors gracef
   assert.match(uiJs, /addEventListener\(["']error["']/, "Global error handler missing");
   assert.match(uiJs, /addEventListener\(["']unhandledrejection["']/, "Global unhandledrejection handler missing");
   assert.match(uiJs, /Reload Page/, "Friendly reload button missing in fallback error card");
+  assert.match(nccJs, /E-API-/, "Short error code formatting missing in apiJson");
+
+  const css = fs.readFileSync(path.join(root, "assets/styles.css"), "utf8");
+  assert.match(css, /\.logo-slot\s*\{[\s\S]*flex-shrink:\s*0/, "logo-slot must enforce flex-shrink: 0");
+  assert.doesNotMatch(readPage("index.html"), /KPRIET Logo|College Logo Slot/, "Logo slots must not render overlapping placeholder text");
 });
 
 test("register, participant, admin, and certificate pages include required production fields and pinned CDNs", () => {

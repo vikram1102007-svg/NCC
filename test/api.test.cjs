@@ -400,6 +400,42 @@ test("non-admin gets 403 on all admin routes, QR checkin enforces single-use, CS
   assert.equal(newLogin.status, 200);
 });
 
+test("health endpoint reports connected db with event count, /api/events lists events, and db-down returns 503 cleanly", async () => {
+  const healthOk = await reqJson("/api/health");
+  assert.equal(healthOk.status, 200);
+  assert.equal(healthOk.body.ok, true);
+  assert.equal(healthOk.body.db, "connected");
+  assert.equal(healthOk.body.events, 5);
+
+  const evRes = await reqJson("/api/events");
+  assert.equal(evRes.status, 200);
+  assert.equal(evRes.body.events.length, 5);
+
+  // Simulate database unavailable / missing MONGODB_URI
+  const prevUri = process.env.MONGODB_URI;
+  delete process.env.MONGODB_URI;
+  setTestDb(null);
+  try {
+    const healthDown = await reqJson("/api/health");
+    assert.equal(healthDown.status, 503);
+    assert.equal(healthDown.body.ok, false);
+    assert.equal(healthDown.body.db, "error");
+    assert.match(healthDown.body.reason, /MONGODB_URI/i);
+    assert.doesNotMatch(JSON.stringify(healthDown.body), /mongodb\+srv/i);
+
+    const bootDown = await reqJson("/api/bootstrap");
+    assert.equal(bootDown.status, 503);
+    assert.ok(bootDown.body.error);
+
+    const eventsDown = await reqJson("/api/events");
+    assert.equal(eventsDown.status, 503);
+    assert.ok(eventsDown.body.error);
+  } finally {
+    if (prevUri !== undefined) process.env.MONGODB_URI = prevUri;
+    setTestDb(db);
+  }
+});
+
 test("rate limiting enforces 429 on repeated auth attempts", async () => {
   const limitedApp = createApp({ authMax: 2 });
   const srv = http.createServer(limitedApp);

@@ -70,6 +70,7 @@ async function confirmAction(title, message, confirmLabel = "Confirm") {
 }
 
 async function apiJson(url, options = {}) {
+  const pathOnly = String(url || "").split("?")[0];
   const fetchOpts = {
     method: options.method || "GET",
     credentials: "same-origin",
@@ -79,7 +80,14 @@ async function apiJson(url, options = {}) {
     fetchOpts.headers["Content-Type"] = "application/json";
     fetchOpts.body = JSON.stringify(options.body);
   }
-  const res = await fetch(url, fetchOpts);
+  let res;
+  try {
+    res = await fetch(url, fetchOpts);
+  } catch {
+    const netErr = new Error("Network error reaching the server.");
+    netErr.code = `E-API-NET ${pathOnly}`;
+    throw netErr;
+  }
   let data = null;
   const text = await res.text();
   try {
@@ -90,6 +98,7 @@ async function apiJson(url, options = {}) {
   if (!res.ok) {
     const err = new Error(data?.error || data?.message || `Request failed (${res.status})`);
     err.status = res.status;
+    err.code = `E-API-${res.status} ${pathOnly}`;
     err.data = data;
     throw err;
   }
@@ -1315,7 +1324,8 @@ if (typeof document !== "undefined") {
     bootApp().catch((err) => {
       if (window.NCCUI?.showGlobalFallbackError) {
         window.NCCUI.showGlobalFallbackError(
-          err?.message || "Could not load event data. Please tap Reload."
+          err?.message || "Could not load event data. Please tap Reload.",
+          err?.code || "E-API-BOOT"
         );
       }
     });

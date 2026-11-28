@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
 const { loadEnv } = require("../lib/env");
-const { getDb } = require("../lib/db");
+const { getDb, sanitizeErrorReason, isDbError } = require("../lib/db");
 const { buildRegistrationsCsv, computeStats } = require("../lib/defaults");
 const {
   hashPassword,
@@ -150,12 +150,30 @@ function createApp(options = {}) {
     "Too many check-in scans. Please slow down and try again."
   );
 
-  // Health check
-  app.get("/api/health", async (_req, res, next) => {
+  // Safe health check (reports connection & event count without exposing secrets)
+  app.get("/api/health", async (_req, res) => {
     try {
       const db = await getDb();
       await db.command({ ping: 1 });
-      res.json({ ok: true, db: "connected" });
+      const eventsCount = await db.collection("events").countDocuments();
+      return res.json({ ok: true, db: "connected", events: eventsCount });
+    } catch (err) {
+      const reason = sanitizeErrorReason(err);
+      console.error("[API /api/health]", reason, err?.stack || "");
+      return res.status(503).json({ ok: false, db: "error", reason });
+    }
+  });
+
+  // Public events list (NO PII)
+  app.get("/api/events", async (_req, res, next) => {
+    try {
+      const db = await getDb();
+      const eventDocs = await db
+        .collection("events")
+        .find({})
+        .sort({ sortOrder: 1, day: 1, title: 1 })
+        .toArray();
+      res.json({ events: eventDocs.map(formatEvent) });
     } catch (err) {
       next(err);
     }
@@ -793,13 +811,27 @@ function createApp(options = {}) {
     }
   });
 
-  // Generic JSON error handler (never leaks raw stack traces or database errors)
-  app.use((err, _req, res, _next) => {
+  // Generic JSON error handler (logs redacted details to server logs, keeps client generic)
+  app.use((err, req, res, _next) => {
     if (err && err.type === "entity.parse.failed") {
       return res.status(400).json({ error: "Invalid JSON request body." });
     }
-    if (process.env.NODE_ENV !== "test") {
-      console.error("[API Error]", err?.message || "Unexpected error");
+    const safeMsg = String(err?.message || "Unexpected error").replace(
+      /mongodb(\+srv)?:\/\/[^\s"'`]+/gi,
+      "[REDACTED_URI]"
+    );
+    const safeStack = String(err?.stack || "").replace(
+      /mongodb(\+srv)?:\/\/[^\s"'`]+/gi,
+      "[REDACTED_URI]"
+    );
+    console.error(`[API Error] ${req.method} ${req.originalUrl}:`, safeMsg);
+    if (safeStack && process.env.NODE_ENV !== "test") {
+      console.error(safeStack);
+    }
+    if (isDbError(err)) {
+      return res.status(503).json({
+        error: "Database temporarily unavailable. Please check configuration and try again."
+      });
     }
     return res.status(500).json({ error: "Service error. Please try again shortly." });
   });
