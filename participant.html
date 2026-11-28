@@ -4,10 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0d1b2a">
-  <title>My Demo Registrations | NCC Two-Day Event</title>
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="scripts/ui.js"></script>
-  <script defer src="ncc.js"></script>
+  <meta name="description" content="My NCC registrations, QR pass download, and attendance certificates for KPR Institute of Engineering and Technology (KPRIET).">
+  <title>My Portal &amp; QR Pass | KPR Institute of Engineering and Technology (KPRIET)</title>
+  <link rel="stylesheet" href="assets/styles.css?v=20261128">
+  <script defer src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script defer src="scripts/ui.js?v=20261128"></script>
+  <script defer src="ncc.js?v=20261128"></script>
 </head>
 <body data-page="participant">
   <a class="skip-link" href="#main-content">Skip to my registrations</a>
@@ -15,15 +18,13 @@
   <header class="site-header">
     <div class="container nav-wrap">
       <a class="brand" href="index.html">
-        <span class="logo-slot" aria-label="College NCC logo placeholder">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2L20 6V12C20 16.97 16.58 20.93 12 22C7.42 20.93 4 16.97 4 12V6L12 2Z" stroke="currentColor" stroke-width="1.75"/>
-            <path d="M12 7L13.5 10.5L17 11L14.3 13.4L15 17L12 15.1L9 17L9.7 13.4L7 11L10.5 10.5L12 7Z" fill="currentColor"/>
-          </svg>
+        <span class="logo-pair" aria-label="KPRIET and NCC logo slots">
+          <span class="logo-slot logo-slot--badge">KPRIET Logo</span>
+          <span class="logo-slot logo-slot--badge">NCC Logo</span>
         </span>
         <span class="brand-text">
-          <span class="brand-title">NCC Two-Day Event</span>
-          <span class="brand-sub">College Unit · Placeholder Logo</span>
+          <span class="brand-title" data-setting="eventName">NCC Two-Day Event</span>
+          <span class="brand-sub" data-setting="collegeName">KPR Institute of Engineering and Technology</span>
         </span>
       </a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
@@ -33,7 +34,7 @@
         <a class="nav-link" href="register.html">Register</a>
         <a class="nav-link" href="login.html">Login</a>
         <a class="nav-link" href="participant.html" aria-current="page">My Portal</a>
-        <a class="nav-admin" href="admin.html">Admin Demo</a>
+        <a class="nav-admin" href="admin.html">Admin</a>
       </nav>
     </div>
   </header>
@@ -44,33 +45,29 @@
       <section class="card" style="background:linear-gradient(120deg,var(--navy-900),var(--navy-800));color:#fff;margin-bottom:24px">
         <div class="dash-header" style="margin-bottom:0">
           <div>
-            <p class="eyebrow eyebrow--gold"><span class="eyebrow-dot"></span> Participant Portal · Demo</p>
-            <h1 id="welcome" style="color:#fff">My registrations</h1>
-            <p id="user-email" style="color:var(--ink-on-dark-muted);font-size:14px;margin-top:4px"></p>
+            <p class="eyebrow eyebrow--gold"><span class="eyebrow-dot"></span> <span data-setting="collegeName">KPR Institute of Engineering and Technology</span></p>
+            <h1 id="welcome" style="color:#fff">Loading your portal...</h1>
+            <p id="user-meta" style="color:var(--ink-on-dark-muted);font-size:14px;margin-top:4px"></p>
           </div>
           <div class="reg-actions">
-            <a class="btn btn-primary btn-sm" href="register.html">+ Add category</a>
+            <a class="btn btn-primary btn-sm" href="register.html">+ Add Event</a>
             <button class="btn btn-ghost btn-sm" type="button" data-logout>Log out</button>
           </div>
         </div>
       </section>
 
-      <div class="notice notice-warning">
-        <strong>DEMO MODE ONLY.</strong> Use fictional test details. This browser-only prototype is not secure, not shared across devices, and does not submit data to NCC. Do not enter real personal information, real passwords, or make payments.
-      </div>
-
       <div class="stats-grid" style="margin-top:20px">
         <div class="stat-card">
-          <span>Active Categories</span>
+          <span>Active Registrations</span>
           <strong id="reg-count">0</strong>
         </div>
         <div class="stat-card">
-          <span>Active Demo Total</span>
-          <strong id="reg-total">₹0</strong>
+          <span>Marked Present</span>
+          <strong id="reg-attended">0</strong>
         </div>
         <div class="stat-card">
-          <span>Demo Fee Each</span>
-          <strong>₹400</strong>
+          <span>Certificates Ready</span>
+          <strong id="reg-certs">0</strong>
         </div>
       </div>
 
@@ -78,16 +75,17 @@
 
       <div class="section-head" style="margin-bottom:16px">
         <div>
-          <p class="eyebrow"><span class="eyebrow-dot"></span> Enrolment Status</p>
-          <h2 style="font-size:32px">My <em>Events</em></h2>
+          <p class="eyebrow"><span class="eyebrow-dot"></span> Event Passes</p>
+          <h2 style="font-size:32px">My <em>Registrations &amp; QR Passes</em></h2>
         </div>
         <div class="reg-actions">
-          <a class="btn btn-secondary btn-sm" href="register.html">Add category →</a>
-          <a class="btn btn-primary btn-sm" href="payment.html">Demo payment →</a>
+          <a class="btn btn-secondary btn-sm" href="register.html">Register more events →</a>
         </div>
       </div>
 
-      <div id="my-registrations" class="participant-list"></div>
+      <div id="my-registrations" class="participant-list">
+        <div class="card"><div class="skeleton" style="height:120px"></div></div>
+      </div>
     </div>
   </main>
 
@@ -95,30 +93,29 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <p class="footer-title">College NCC Two-Day Event</p>
-          <p class="footer-copy">Organised by the College NCC Unit. Event details, official dates, and logos are placeholders until formally approved.</p>
+          <p class="footer-title" data-setting="collegeName">KPR Institute of Engineering and Technology</p>
+          <p class="footer-copy">Organised by the <span data-setting="collegeShortName">KPRIET</span> NCC Unit.</p>
         </div>
         <div>
           <p class="footer-title">Quick Links</p>
           <ul class="footer-links">
             <li><a href="index.html">Home &amp; Schedule</a></li>
             <li><a href="events.html">Events &amp; Criteria</a></li>
-            <li><a href="register.html">Demo Registration</a></li>
-            <li><a href="admin.html">Organiser Admin Demo</a></li>
+            <li><a href="register.html">Register</a></li>
+            <li><a href="certificate.html">Verify Certificate</a></li>
           </ul>
         </div>
         <div>
-          <p class="footer-title">Unit Contact (Placeholder)</p>
+          <p class="footer-title">Unit Contact</p>
           <ul class="footer-links">
-            <li>Parade Ground, College Campus</li>
-            <li>Email: ncc-unit@college.example</li>
-            <li>Demo dashboard</li>
+            <li data-setting="venueText">KPRIET Campus</li>
+            <li>Email: <span data-setting="contactEmail">ncc@kpriet.ac.in</span></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span id="year">2026</span> College NCC Event Demo</span>
-        <span>Demo dashboard · browser storage only</span>
+        <span>© <span id="year">2026</span> <span data-setting="collegeName">KPR Institute of Engineering and Technology</span></span>
+        <span data-setting="eventName">NCC Two-Day Event</span>
       </div>
     </div>
   </footer>

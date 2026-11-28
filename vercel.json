@@ -1,6 +1,28 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ncc-react && npm install",
-  "buildCommand": "cd ncc-react && npm run build",
-  "outputDirectory": "ncc-react/dist"
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/events", "destination": "/events.html" },
+    { "source": "/event", "destination": "/event.html" },
+    { "source": "/register", "destination": "/register.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/participant", "destination": "/participant.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/certificate", "destination": "/certificate.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*\\.html|ncc\\.js|scripts/.*\\.js|assets/.*\\.css)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        }
+      ]
+    }
+  ]
 }

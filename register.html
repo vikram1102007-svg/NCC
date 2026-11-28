@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0d1b2a">
-  <title>Demo Registration | NCC Two-Day Event</title>
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="scripts/ui.js"></script>
-  <script defer src="ncc.js"></script>
+  <meta name="description" content="Cadet account signup and event registration for KPR Institute of Engineering and Technology (KPRIET) NCC Event.">
+  <title>Cadet Registration | KPR Institute of Engineering and Technology (KPRIET)</title>
+  <link rel="stylesheet" href="assets/styles.css?v=20261128">
+  <script defer src="scripts/ui.js?v=20261128"></script>
+  <script defer src="ncc.js?v=20261128"></script>
 </head>
 <body data-page="register">
   <a class="skip-link" href="#main-content">Skip to registration form</a>
@@ -15,15 +16,13 @@
   <header class="site-header">
     <div class="container nav-wrap">
       <a class="brand" href="index.html">
-        <span class="logo-slot" aria-label="College NCC logo placeholder">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2L20 6V12C20 16.97 16.58 20.93 12 22C7.42 20.93 4 16.97 4 12V6L12 2Z" stroke="currentColor" stroke-width="1.75"/>
-            <path d="M12 7L13.5 10.5L17 11L14.3 13.4L15 17L12 15.1L9 17L9.7 13.4L7 11L10.5 10.5L12 7Z" fill="currentColor"/>
-          </svg>
+        <span class="logo-pair" aria-label="KPRIET and NCC logo slots">
+          <span class="logo-slot logo-slot--badge">KPRIET Logo</span>
+          <span class="logo-slot logo-slot--badge">NCC Logo</span>
         </span>
         <span class="brand-text">
-          <span class="brand-title">NCC Two-Day Event</span>
-          <span class="brand-sub">College Unit · Placeholder Logo</span>
+          <span class="brand-title" data-setting="eventName">NCC Two-Day Event</span>
+          <span class="brand-sub" data-setting="collegeName">KPR Institute of Engineering and Technology</span>
         </span>
       </a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
@@ -33,7 +32,7 @@
         <a class="nav-link" href="register.html" aria-current="page">Register</a>
         <a class="nav-link" href="login.html">Login</a>
         <a class="nav-link" href="participant.html">My Portal</a>
-        <a class="nav-admin" href="admin.html">Admin Demo</a>
+        <a class="nav-admin" href="admin.html">Admin</a>
       </nav>
     </div>
   </header>
@@ -43,80 +42,92 @@
     <div class="container auth-split">
       <aside class="auth-brand-panel">
         <div>
-          <p class="eyebrow eyebrow--gold"><span class="eyebrow-dot"></span> Participant Registration · Demo</p>
-          <h2>Enrol in Demo Categories</h2>
+          <p class="eyebrow eyebrow--gold"><span class="eyebrow-dot"></span> <span data-setting="collegeShortName">KPRIET</span> Cadet Enrolment</p>
+          <h2>Create Cadet Account &amp; Register</h2>
           <p style="color:var(--ink-on-dark-muted);font-size:15px;margin-top:12px">
-            Test the full cadet registration workflow locally in your browser. Official registration opens only after committee approval.
+            Register from your phone for the two-day NCC event at <strong data-setting="collegeName">KPR Institute of Engineering and Technology</strong>. Receive your QR pass immediately in My Portal.
           </p>
         </div>
         <ul class="auth-checklist">
-          <li>✓ Firing remains subject to unit &amp; safety approvals</li>
-          <li>✓ Duplicate active category submissions are blocked</li>
-          <li>✓ Instant reference ID generated for My Portal</li>
-          <li>✓ Mobile-ready for QR code scanning tests</li>
+          <li>✓ Live seat counts updated directly from the database</li>
+          <li>✓ Duplicate active registration per category blocked automatically</li>
+          <li>✓ Firing remains strictly subject to unit &amp; safety approvals</li>
+          <li>✓ Downloadable QR pass with opaque random check-in token</li>
         </ul>
       </aside>
 
       <section class="card">
         <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
           <a class="auth-tab" href="login.html">Log In</a>
-          <a class="auth-tab is-active" href="register.html" aria-current="page">Create Demo Account</a>
+          <a class="auth-tab is-active" href="register.html" aria-current="page">Sign Up &amp; Register</a>
         </div>
 
-        <p class="eyebrow"><span class="eyebrow-dot"></span> Demo Enrolment</p>
-        <h1 id="register-title" style="font-size:34px;margin-bottom:6px">Create demo account</h1>
-        <p id="register-sub" style="font-size:14px;color:var(--ink-600)">Create a browser-only test account and register for Firing or Drill.</p>
-
-        <div class="notice notice-warning">
-          <strong>DEMO MODE ONLY.</strong> Use fictional test details. This browser-only prototype is not secure, not shared across devices, and does not submit data to NCC. Do not enter real personal information, real passwords, or make payments.
-        </div>
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Cadet Enrolment</p>
+        <h1 id="register-title" style="font-size:34px;margin-bottom:6px">Cadet registration</h1>
+        <p id="register-sub" style="font-size:14px;color:var(--ink-600)">Create your cadet account and select your event category.</p>
 
         <div id="logged-in-register-info" class="message info hidden" aria-live="polite"></div>
 
         <form id="register-form">
           <div id="account-fields" class="field-grid">
             <div class="field">
-              <label for="reg-name">Test name</label>
-              <input id="reg-name" name="name" required placeholder="Demo Cadet">
+              <label for="reg-name">Full name</label>
+              <input id="reg-name" name="name" required autocomplete="name" placeholder="Cadet Full Name">
             </div>
             <div class="field">
-              <label for="reg-email">Test email</label>
-              <input id="reg-email" name="email" type="email" required placeholder="cadet@example.test">
+              <label for="reg-regno">NCC Regimental Number</label>
+              <input id="reg-regno" name="regimentalNo" required placeholder="TN/SD/24/000000">
             </div>
             <div class="field">
-              <label for="reg-phone">Test phone (optional)</label>
-              <input id="reg-phone" name="phone" type="tel" placeholder="0000000000">
+              <label for="reg-year">Year of study</label>
+              <select id="reg-year" name="year" required>
+                <option value="">Select year</option>
+                <option value="I Year">I Year</option>
+                <option value="II Year">II Year</option>
+                <option value="III Year">III Year</option>
+                <option value="IV Year">IV Year</option>
+              </select>
             </div>
             <div class="field">
-              <label for="reg-password">Demo password</label>
+              <label for="reg-dept">Department</label>
+              <input id="reg-dept" name="department" required placeholder="e.g. CSE, ECE, MECH">
+            </div>
+            <div class="field">
+              <label for="reg-phone">Mobile phone</label>
+              <input id="reg-phone" name="phone" type="tel" required autocomplete="tel" placeholder="10-digit mobile number">
+            </div>
+            <div class="field">
+              <label for="reg-email">Email address</label>
+              <input id="reg-email" name="email" type="email" required autocomplete="email" placeholder="cadet@kpriet.ac.in">
+            </div>
+            <div class="field" style="grid-column:1/-1">
+              <label for="reg-password">Password (minimum 6 characters)</label>
               <div class="input-wrap">
-                <input id="reg-password" name="password" type="password" minlength="6" required placeholder="6+ characters">
+                <input id="reg-password" name="password" type="password" minlength="6" required autocomplete="new-password" placeholder="Create a strong password">
                 <button class="password-toggle" type="button" data-password-toggle="reg-password" aria-pressed="false">Show</button>
               </div>
             </div>
           </div>
 
           <p class="field" style="margin-bottom:6px"><label>Select event(s)</label></p>
-          <div class="event-options">
-            <label class="event-choice" for="event-firing">
-              <input id="event-firing" type="checkbox" name="event" value="firing" disabled>
-              <span>
-                <strong>Firing</strong>
-                <small>Registration not open (subject to approvals)</small>
-              </span>
-            </label>
-            <label class="event-choice" for="event-drill">
-              <input id="event-drill" type="checkbox" name="event" value="drill">
-              <span>
-                <strong>Drill</strong>
-                <small>Demo fee ₹400</small>
-              </span>
-            </label>
+          <div id="register-events-list" class="event-options">
+            <div class="skeleton" style="height:64px"></div>
+            <div class="skeleton" style="height:64px"></div>
           </div>
 
-          <div class="total-bar">
-            <span>Demo total</span>
-            <strong id="event-total">₹0</strong>
+          <div id="team-name-field" class="field hidden" style="margin-top:16px">
+            <label for="reg-team">Team / Squad Name (Required for Team events)</label>
+            <input id="reg-team" name="teamName" placeholder="e.g. KPRIET Alpha Squad">
+          </div>
+
+          <div id="privacy-consent-block" class="notice" style="margin-top:16px">
+            <p style="font-size:13px;margin-bottom:10px" data-setting="privacyNoticeText">
+              Your name, regimental number, year, department, phone, and email are collected solely for KPRIET NCC Two-Day Event enrolment, attendance check-in, and certificate verification.
+            </p>
+            <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;font-weight:600;cursor:pointer">
+              <input id="reg-consent" name="privacyConsent" type="checkbox" required style="width:18px;height:18px;margin-top:2px;flex-shrink:0">
+              <span>I understand why my details are collected and consent to their use for this KPRIET NCC event.</span>
+            </label>
           </div>
 
           <div id="register-msg" class="message" aria-live="polite"></div>
@@ -124,7 +135,7 @@
         </form>
 
         <p id="register-alt-link" style="text-align:center;font-size:13px;color:var(--ink-600);margin-top:18px">
-          Already created a demo account? <a href="login.html" style="color:var(--olive-700);font-weight:700;text-decoration:underline">Log in</a>
+          Already registered an account? <a href="login.html" style="color:var(--olive-700);font-weight:700;text-decoration:underline">Log in</a>
         </p>
       </section>
     </div>
@@ -134,30 +145,29 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <p class="footer-title">College NCC Two-Day Event</p>
-          <p class="footer-copy">Organised by the College NCC Unit. Event details, official dates, and logos are placeholders until formally approved.</p>
+          <p class="footer-title" data-setting="collegeName">KPR Institute of Engineering and Technology</p>
+          <p class="footer-copy">Organised by the <span data-setting="collegeShortName">KPRIET</span> NCC Unit.</p>
         </div>
         <div>
           <p class="footer-title">Quick Links</p>
           <ul class="footer-links">
             <li><a href="index.html">Home &amp; Schedule</a></li>
             <li><a href="events.html">Events &amp; Criteria</a></li>
-            <li><a href="login.html">Demo Login</a></li>
-            <li><a href="admin.html">Organiser Admin Demo</a></li>
+            <li><a href="login.html">Cadet Login</a></li>
+            <li><a href="certificate.html">Verify Certificate</a></li>
           </ul>
         </div>
         <div>
-          <p class="footer-title">Unit Contact (Placeholder)</p>
+          <p class="footer-title">Unit Contact</p>
           <ul class="footer-links">
-            <li>Parade Ground, College Campus</li>
-            <li>Email: ncc-unit@college.example</li>
-            <li>Demo only · no live registration</li>
+            <li data-setting="venueText">KPRIET Campus</li>
+            <li>Email: <span data-setting="contactEmail">ncc@kpriet.ac.in</span></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span id="year">2026</span> College NCC Event Demo</span>
-        <span>Demo only · no live registration</span>
+        <span>© <span id="year">2026</span> <span data-setting="collegeName">KPR Institute of Engineering and Technology</span></span>
+        <span data-setting="datesText">Dates TBA</span>
       </div>
     </div>
   </footer>

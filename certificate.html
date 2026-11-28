@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d1b2a">
+  <meta name="description" content="Official NCC event certificate verification portal for KPR Institute of Engineering and Technology (KPRIET).">
+  <title>Verify Certificate | KPR Institute of Engineering and Technology (KPRIET)</title>
+  <link rel="stylesheet" href="assets/styles.css?v=20261128">
+  <script defer src="scripts/ui.js?v=20261128"></script>
+  <script defer src="ncc.js?v=20261128"></script>
+</head>
+<body data-page="certificate">
+  <a class="skip-link" href="#main-content">Skip to certificate verification</a>
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="index.html">
+        <span class="logo-pair" aria-label="KPRIET and NCC logo slots">
+          <span class="logo-slot logo-slot--badge">KPRIET Logo</span>
+          <span class="logo-slot logo-slot--badge">NCC Logo</span>
+        </span>
+        <span class="brand-text">
+          <span class="brand-title" data-setting="eventName">NCC Two-Day Event</span>
+          <span class="brand-sub" data-setting="collegeName">KPR Institute of Engineering and Technology</span>
+        </span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="events.html">Events</a>
+        <a class="nav-link" href="register.html">Register</a>
+        <a class="nav-link" href="login.html">Login</a>
+        <a class="nav-link" href="participant.html">My Portal</a>
+        <a class="nav-admin" href="admin.html">Admin</a>
+      </nav>
+    </div>
+  </header>
+  <div class="nav-backdrop" aria-hidden="true"></div>
+
+  <main id="main-content" class="page-shell">
+    <div class="container">
+      <section class="card card-medium">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Official Verification · <span data-setting="collegeShortName">KPRIET</span></p>
+        <h1 style="font-size:34px;margin-bottom:6px">Verify Event Certificate</h1>
+        <p style="font-size:14px;color:var(--ink-600);margin-bottom:18px">
+          Enter the unique Certificate ID printed on a <span data-setting="collegeName">KPR Institute of Engineering and Technology</span> NCC event certificate.
+        </p>
+
+        <form id="cert-verify-form" style="display:flex;flex-wrap:wrap;gap:10px">
+          <label class="sr-only" for="cert-id-input">Certificate ID</label>
+          <input id="cert-id-input" name="certId" required placeholder="e.g. CERT-A1B2C3D4" style="flex:1;min-width:200px;min-height:46px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:monospace;font-size:14px">
+          <button class="btn btn-primary" type="submit">Verify Certificate</button>
+        </form>
+
+        <div id="cert-msg" class="message" aria-live="polite"></div>
+        <div id="cert-result" class="hidden" style="margin-top:20px"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> <span data-setting="collegeName">KPR Institute of Engineering and Technology</span></span>
+        <span data-setting="eventName">NCC Two-Day Event</span>
+      </div>
+    </div>
+  </footer>
+  <button id="back-to-top" class="back-to-top" type="button" aria-label="Back to top">↑</button>
+</body>
+</html>

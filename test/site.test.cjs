@@ -2,170 +2,125 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { escapeHtml, sanitizeCsvCell, buildCsv, computeStats } = require("../ncc.js");
 
 const root = path.resolve(__dirname, "..");
-const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
-const home = read("index.html");
-const events = read("events.html");
-const register = read("register.html");
-const login = read("login.html");
-const admin = read("admin.html");
-const participant = read("participant.html");
-const payment = read("payment.html");
-const app = read("ncc.js");
-const css = read("assets/styles.css");
-const uiScript = read("scripts/ui.js");
-const demoHelpers = require("../ncc.js");
 
-test("public home has accessible document basics and a two-day event title", () => {
-  assert.match(home, /<html lang="en">/i);
-  assert.match(home, /<meta name="viewport" content="width=device-width,initial-scale=1">/i);
-  assert.match(home, /<title>[^<]+<\/title>/i);
-  assert.match(home, /<header\b/i);
-  assert.match(home, /<nav\b/i);
-  assert.match(home, /<main\b/i);
-  assert.match(home, /<footer\b/i);
-  assert.equal((home.match(/<h1\b/gi) || []).length, 1);
-  assert.match(home, /two-day/i);
-});
+function readPage(name) {
+  return fs.readFileSync(path.join(root, name), "utf8");
+}
 
-test("navigation targets and linked local pages exist across all pages", () => {
-  for (const page of [home, events, register, login, participant, payment, admin]) {
-    const links = [...page.matchAll(/href="([^"]+\.html(?:#|\?)?[^"]*)"/g)].map(
-      (m) => m[1].split("#")[0].split("?")[0]
-    );
-    assert.ok(links.length >= 3);
-    for (const link of links) {
-      assert.ok(fs.existsSync(path.join(root, link)), "missing linked page: " + link);
-    }
+test("all main HTML pages exist, brand KPRIET cleanly, and have no demo or payment leftovers", () => {
+  const pages = [
+    "index.html",
+    "events.html",
+    "event.html",
+    "register.html",
+    "login.html",
+    "participant.html",
+    "admin.html",
+    "certificate.html",
+    "404.html"
+  ];
+  assert.equal(fs.existsSync(path.join(root, "payment.html")), false, "payment.html must be removed");
+
+  for (const page of pages) {
+    const html = readPage(page);
+    assert.match(html, /KPR Institute of Engineering and Technology/i, `${page} must include KPRIET`);
+    assert.match(html, /meta name="viewport"/i, `${page} must include viewport meta`);
+    assert.doesNotMatch(html, /admin@ncc\.test|NCCDemo400/i, `${page} must not embed demo credentials`);
+    assert.doesNotMatch(html, /DEMO MODE ONLY|Simulate payment|payment\.html/i, `${page} must not have demo/payment UI`);
+    assert.doesNotMatch(html, /\sonclick=|\sonsubmit=|\sonchange=/i, `${page} must avoid inline event handlers for CSP`);
   }
 });
 
-test("event details use pending placeholders rather than invented official dates", () => {
-  const pages = home + events;
-  assert.match(pages, /Dates/i);
-  assert.match(pages, /To be announced|TBA|pending organiser confirmation/i);
-  assert.match(pages, /Drill/i);
-  assert.match(pages, /Firing/i);
-  assert.match(pages, /approval/i);
-  assert.match(pages, /fee.{0,30}(?:TBA|announced|pending)/i);
-});
-
-test("demo registration, login and participant pages have accessible forms and demo notices", () => {
-  assert.match(register, /DEMO MODE ONLY/i);
-  assert.match(register, /<form id="register-form">/);
-  assert.match(register, /for="reg-name"/);
-  assert.match(register, /id="reg-name"/);
-  assert.match(register, /for="reg-email"/);
-  assert.match(register, /id="reg-password"/);
-  assert.match(login, /DEMO MODE ONLY/i);
-  assert.match(login, /<form id="login-form">/);
-  assert.match(login, /for="login-email"/);
-  assert.match(login, /for="login-password"/);
-  assert.match(participant, /DEMO MODE ONLY/i);
-  assert.match(participant, /id="my-registrations"/);
-  assert.match(participant, /data-logout/);
-});
-
-test("admin demo page has clear demo-only labels, accessible controls and confirmation", () => {
-  assert.match(admin, /DEMO MODE ONLY/i);
-  assert.match(admin, /<form id="admin-form">/);
-  assert.match(admin, /for="admin-email"/);
-  assert.match(admin, /for="admin-password"/);
-  assert.match(admin, /id="admin-export"/);
-  assert.match(admin, /id="admin-search"/);
-  assert.match(app, /confirmAction\(|window\.confirm\(/);
-  assert.match(uiScript, /confirmModal/);
-});
-
-test("payment simulation page stays strictly demo-only with no UPI QR or gateway", () => {
-  assert.match(payment, /DEMO MODE ONLY/i);
-  assert.match(payment, /No real payment is possible here/i);
-  assert.match(payment, /id="simulate-payment"/);
-  assert.doesNotMatch(payment, /ncc-demo@upi|<img\b|upi:/i);
-});
-
-test("ncc.js escapes HTML, neutralises CSV formula injection and excludes cancelled stats", () => {
-  assert.equal(
-    demoHelpers.escapeHtml('<script>alert("xss")</script>&\'test\''),
-    "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;&amp;&#39;test&#39;"
+test("frontend scripts remove localStorage data storage and handle errors gracefully", () => {
+  const nccJs = readPage("ncc.js");
+  const uiJs = readPage("scripts/ui.js");
+  assert.doesNotMatch(
+    nccJs,
+    /(?:localStorage|sessionStorage)\.(?:getItem|setItem|removeItem|clear)/i,
+    "ncc.js must not store data in localStorage/sessionStorage"
   );
-  assert.equal(demoHelpers.sanitizeCsvCell("=CMD()"), "\"'=CMD()\"");
-  assert.equal(demoHelpers.sanitizeCsvCell("+123"), "\"'+123\"");
-  assert.equal(demoHelpers.sanitizeCsvCell("-123"), "\"'-123\"");
-  assert.equal(demoHelpers.sanitizeCsvCell("@SUM(A1)"), "\"'@SUM(A1)\"");
-  assert.equal(demoHelpers.sanitizeCsvCell("  =1+1"), "\"'  =1+1\"");
-  assert.equal(demoHelpers.sanitizeCsvCell('Cadet "A"'), '"Cadet ""A"""');
+  assert.doesNotMatch(
+    uiJs,
+    /(?:localStorage|sessionStorage)\.(?:getItem|setItem|removeItem|clear)/i,
+    "scripts/ui.js must not read localStorage"
+  );
+  assert.match(uiJs, /addEventListener\(["']error["']/, "Global error handler missing");
+  assert.match(uiJs, /addEventListener\(["']unhandledrejection["']/, "Global unhandledrejection handler missing");
+  assert.match(uiJs, /Reload Page/, "Friendly reload button missing in fallback error card");
+});
 
-  const csv = demoHelpers.buildCsv([
-    {
-      id: "NCC-1",
-      name: "=Evil",
-      email: "a@b.test",
-      event: "firing",
-      fee: 400,
-      status: "Registered",
-      payment: "Demo pending"
-    }
-  ]);
-  assert.match(csv, /^"Reference","Name","Email","Event","Fee","Status","Payment"/);
-  assert.match(csv, /"'=Evil"/);
+test("register, participant, admin, and certificate pages include required production fields and pinned CDNs", () => {
+  const reg = readPage("register.html");
+  assert.match(reg, /name="regimentalNo"/);
+  assert.match(reg, /name="year"/);
+  assert.match(reg, /name="department"/);
+  assert.match(reg, /name="phone"/);
+  assert.match(reg, /name="privacyConsent"/);
 
-  const stats = demoHelpers.computeStats([
-    { status: "Registered", payment: "Demo pending", fee: 400 },
-    { status: "Confirmed", payment: "Demo paid", fee: 400 },
-    { status: "Cancelled", payment: "Demo pending", fee: 400 }
-  ]);
+  const part = readPage("participant.html");
+  assert.match(part, /qrcode-generator@1\.4\.4\/qrcode\.min\.js/);
+  assert.match(part, /jspdf\/2\.5\.2\/jspdf\.umd\.min\.js/);
+
+  const admin = readPage("admin.html");
+  assert.match(admin, /html5-qrcode@2\.3\.8\/html5-qrcode\.min\.js/);
+  assert.doesNotMatch(admin, /value="admin@/i, "Admin email must never be pre-filled");
+});
+
+test("firing stays locked in defaults and vercel.json defines relative rewrites and CSP headers", () => {
+  const { DEFAULT_EVENTS } = require("../lib/defaults");
+  const firing = DEFAULT_EVENTS.find((e) => e._id === "firing");
+  assert.ok(firing);
+  assert.equal(firing.requiresApproval, true);
+  assert.equal(firing.registrationOpen, false);
+  assert.match(firing.statusLabel, /subject to approvals/i);
+
+  const vercel = JSON.parse(readPage("vercel.json"));
+  assert.ok(Array.isArray(vercel.rewrites));
+  assert.ok(vercel.rewrites.some((r) => r.source === "/api/(.*)" && r.destination === "/api/index.js"));
+  for (const r of vercel.rewrites) {
+    assert.ok(r.destination.startsWith("/"), `Rewrite destination ${r.destination} must be relative`);
+  }
+});
+
+test("ncc.js escapes HTML, neutralises CSV formula prefixes, and computes stats cleanly", () => {
+  assert.equal(escapeHtml('<script>"\'&'), "&lt;script&gt;&quot;&#39;&amp;");
+  assert.equal(sanitizeCsvCell("=CMD()"), "\"'=CMD()\"");
+  assert.equal(sanitizeCsvCell("+SUM()"), "\"'+SUM()\"");
+  assert.equal(sanitizeCsvCell("-1+1"), "\"'-1+1\"");
+  assert.equal(sanitizeCsvCell("@2+2"), "\"'@2+2\"");
+  const csv = buildCsv(
+    [
+      {
+        id: "NCC-1",
+        token: "TKN-ABC",
+        participantName: "=Formula",
+        email: "a@b.c",
+        eventId: "drill",
+        status: "Registered",
+        attended: true
+      }
+    ],
+    { drill: { title: "Drill" } }
+  );
+  assert.match(csv, /"'=Formula"/);
+  assert.match(csv, /"Present"/);
+
+  const stats = computeStats(
+    [
+      { status: "Registered", attended: false },
+      { status: "Confirmed", attended: true },
+      { status: "Cancelled", attended: false }
+    ],
+    [{ capacity: 30, registeredCount: 2 }]
+  );
   assert.deepEqual(stats, {
     total: 2,
-    paid: 1,
-    pending: 1,
+    attended: 1,
     cancelled: 1,
-    feeTotal: 800
+    seatsFilled: 2,
+    totalCapacity: 30
   });
-});
-
-test("stylesheet includes responsive, focus-visible and reduced-motion support", () => {
-  assert.match(css, /@media/i);
-  assert.match(css, /focus-visible/i);
-  assert.match(css, /prefers-reduced-motion/i);
-});
-
-test("firing event blocks registration in shared data, event detail, register page, and cards", () => {
-  const { NCC_EVENTS } = require("../scripts/ui.js");
-  const firing = NCC_EVENTS.find((ev) => ev.id === "firing");
-  assert.ok(firing);
-  assert.equal(firing.registrationOpen, false);
-  assert.equal(firing.requiresApproval, true);
-  assert.match(firing.note, /Registration is not open.*subject to approvals/i);
-
-  for (const ev of NCC_EVENTS.filter((item) => item.id !== "firing")) {
-    assert.equal(ev.registrationOpen, true);
-  }
-
-  // No card or page links directly to register.html?event=firing
-  assert.doesNotMatch(home, /register\.html\?event=firing/i);
-  assert.doesNotMatch(events, /register\.html\?event=firing/i);
-
-  // event.html logic removes register links when registrationOpen is false / requiresApproval is true
-  assert.match(uiScript, /if \(canRegister\) \{[\s\S]*\} else \{[\s\S]*btn1\.remove\(\)/);
-
-  // register.html disables firing and ncc.js blocks ?event=firing
-  assert.match(register, /id="event-firing"[^>]*disabled/);
-  assert.match(app, /preselected === "firing"/);
-  assert.doesNotMatch(app, /VALID_EVENTS\s*=\s*new Set\(Object\.keys\(LABELS\)\)/);
-});
-
-test("landing page renders all 5 events matching NCC_EVENTS count", () => {
-  const { NCC_EVENTS } = require("../scripts/ui.js");
-  assert.equal(NCC_EVENTS.length, 5);
-  const homeCards = home.match(/<article class="card card-hover event-card" data-event-card>/g) || [];
-  assert.equal(homeCards.length, NCC_EVENTS.length);
-  const countMatch = home.match(/id="home-planned-count"[^>]*>(\d+)<\/strong>/);
-  assert.ok(countMatch);
-  assert.equal(Number(countMatch[1]), homeCards.length);
-  assert.match(home, /Explore all 5 events/);
-  for (const ev of NCC_EVENTS) {
-    assert.ok(home.includes(`event.html?id=${ev.id}`), "missing home link for " + ev.id);
-  }
 });

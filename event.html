@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0d1b2a">
-  <title>Event Criteria &amp; Briefing | NCC Two-Day Event</title>
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="scripts/ui.js"></script>
-  <script defer src="ncc.js"></script>
+  <meta name="description" content="Event rules, schedule, and eligibility criteria for KPR Institute of Engineering and Technology (KPRIET) NCC Event.">
+  <title>Event Briefing | KPR Institute of Engineering and Technology (KPRIET)</title>
+  <link rel="stylesheet" href="assets/styles.css?v=20261128">
+  <script defer src="scripts/ui.js?v=20261128"></script>
+  <script defer src="ncc.js?v=20261128"></script>
 </head>
 <body data-page="event-detail">
   <a class="skip-link" href="#main-content">Skip to event details</a>
@@ -15,15 +16,13 @@
   <header class="site-header">
     <div class="container nav-wrap">
       <a class="brand" href="index.html">
-        <span class="logo-slot" aria-label="College NCC logo placeholder">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2L20 6V12C20 16.97 16.58 20.93 12 22C7.42 20.93 4 16.97 4 12V6L12 2Z" stroke="currentColor" stroke-width="1.75"/>
-            <path d="M12 7L13.5 10.5L17 11L14.3 13.4L15 17L12 15.1L9 17L9.7 13.4L7 11L10.5 10.5L12 7Z" fill="currentColor"/>
-          </svg>
+        <span class="logo-pair" aria-label="KPRIET and NCC logo slots">
+          <span class="logo-slot logo-slot--badge">KPRIET Logo</span>
+          <span class="logo-slot logo-slot--badge">NCC Logo</span>
         </span>
         <span class="brand-text">
-          <span class="brand-title">NCC Two-Day Event</span>
-          <span class="brand-sub">College Unit · Placeholder Logo</span>
+          <span class="brand-title" data-setting="eventName">NCC Two-Day Event</span>
+          <span class="brand-sub" data-setting="collegeName">KPR Institute of Engineering and Technology</span>
         </span>
       </a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
@@ -33,7 +32,7 @@
         <a class="nav-link" href="register.html">Register</a>
         <a class="nav-link" href="login.html">Login</a>
         <a class="nav-link" href="participant.html">My Portal</a>
-        <a class="nav-admin" href="admin.html">Admin Demo</a>
+        <a class="nav-admin" href="admin.html">Admin</a>
       </nav>
     </div>
   </header>
@@ -43,13 +42,11 @@
     <section class="hero" style="padding:48px 0">
       <div class="hero-grid-bg" aria-hidden="true"></div>
       <div class="container" style="position:relative;z-index:1">
-        <p class="eyebrow eyebrow--gold"><a href="events.html" style="text-decoration:underline">← All Events</a> · <span id="detail-badge">Day TBA</span></p>
-        <h1 id="detail-title" style="font-size:clamp(36px,5vw,56px)">Drill</h1>
-        <p id="detail-summary" class="hero-lead" style="margin-bottom:20px">
-          Precision foot drill and command assessment. Final rules and judging rubrics are pending organiser confirmation.
-        </p>
+        <p class="eyebrow eyebrow--gold"><a href="events.html" style="text-decoration:underline">← All Events</a> · <span id="detail-badge">Loading...</span></p>
+        <h1 id="detail-title" style="font-size:clamp(36px,5vw,56px)">Loading event...</h1>
+        <p id="detail-summary" class="hero-lead" style="margin-bottom:20px">Fetching live event schedule and capacity from the server.</p>
         <div class="hero-actions" style="margin-bottom:0">
-          <a id="detail-register-btn" class="btn btn-primary" href="register.html?event=drill">Register for this event →</a>
+          <a id="detail-register-btn" class="btn btn-primary hidden" href="register.html">Register for this event →</a>
           <a class="btn btn-ghost" href="events.html">Back to events</a>
         </div>
       </div>
@@ -61,70 +58,62 @@
           <p class="eyebrow"><span class="eyebrow-dot"></span> Event Briefing</p>
           <h2 style="font-size:28px;margin-bottom:16px">Schedule &amp; Venue Info</h2>
           <div style="display:grid;gap:12px;font-size:14px">
-            <p><strong>Day &amp; Date:</strong> <span id="detail-date">Day 1 · Date To be announced</span></p>
-            <p><strong>Reporting Time:</strong> <span id="detail-time">Time To be announced</span></p>
-            <p><strong>Venue:</strong> <span id="detail-venue">College Parade Ground (TBA)</span></p>
-            <p><strong>Participation Type:</strong> <span id="detail-type">Squad / Individual</span></p>
-            <p><strong>Fee:</strong> <span id="detail-fee">Fee to be announced (Demo ₹400)</span></p>
+            <p><strong>Day &amp; Date:</strong> <span id="detail-date">Loading...</span></p>
+            <p><strong>Reporting Time:</strong> <span id="detail-time">Loading...</span></p>
+            <p><strong>Venue:</strong> <span id="detail-venue">Loading...</span></p>
+            <p><strong>Participation Type:</strong> <span id="detail-type">Loading...</span></p>
           </div>
           <div class="seat-meter" style="margin-top:20px">
             <div class="seat-meter-head">
-              <span id="detail-seats">Demo slots available</span>
-              <span id="detail-status-pill" class="pill pill-olive">Pending confirmation</span>
+              <span id="detail-seats">Checking live seat availability...</span>
+              <span id="detail-status-pill" class="pill pill-olive">Open</span>
             </div>
-            <div class="seat-track"><div id="detail-seats-bar" class="seat-fill" style="width:15%"></div></div>
+            <div class="seat-track"><div id="detail-seats-bar" class="seat-fill" style="width:10%"></div></div>
           </div>
-          <div id="detail-approval-note" class="notice notice-warning" style="margin-top:20px">
-            Event date, venue, and rules are pending official committee confirmation.
-          </div>
+          <div id="detail-approval-note" class="notice notice-warning hidden" style="margin-top:20px"></div>
         </article>
 
         <article class="card">
           <p class="eyebrow"><span class="eyebrow-dot"></span> Guidelines &amp; Eligibility</p>
           <h2 style="font-size:28px;margin-bottom:8px">Criteria Checklist</h2>
-          <p style="font-size:13px;color:var(--ink-600)">Draft criteria for preview purposes only; final checklist will be issued by the event committee.</p>
-          <ul id="detail-criteria" class="criteria-list">
-            <li><span class="criteria-check">✓</span><span>Valid College ID and NCC cadet enrollment verification required on arrival.</span></li>
-            <li><span class="criteria-check">✓</span><span>Proper NCC uniform turnout and reporting 30 minutes prior to start time.</span></li>
-            <li><span class="criteria-check">✓</span><span>Adherence to safety instructions and judging officer commands at all times.</span></li>
-          </ul>
+          <p style="font-size:13px;color:var(--ink-600)">Issued by <span data-setting="collegeName">KPR Institute of Engineering and Technology</span> NCC unit.</p>
+          <ul id="detail-criteria" class="criteria-list"></ul>
         </article>
       </div>
     </section>
   </main>
 
-  <div class="sticky-mobile-cta">
-    <a id="detail-mobile-register" class="btn btn-primary" style="width:100%" href="register.html?event=drill">Register Now →</a>
+  <div class="sticky-mobile-cta hidden" id="detail-mobile-bar">
+    <a id="detail-mobile-register" class="btn btn-primary" style="width:100%" href="register.html">Register Now →</a>
   </div>
 
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
         <div>
-          <p class="footer-title">College NCC Two-Day Event</p>
-          <p class="footer-copy">Organised by the College NCC Unit. Event details, official dates, and logos are placeholders until formally approved.</p>
+          <p class="footer-title" data-setting="collegeName">KPR Institute of Engineering and Technology</p>
+          <p class="footer-copy">Organised by the <span data-setting="collegeShortName">KPRIET</span> NCC Unit.</p>
         </div>
         <div>
           <p class="footer-title">Quick Links</p>
           <ul class="footer-links">
             <li><a href="events.html">Events &amp; Criteria</a></li>
-            <li><a href="register.html">Demo Registration</a></li>
-            <li><a href="participant.html">Participant Portal</a></li>
-            <li><a href="admin.html">Organiser Admin Demo</a></li>
+            <li><a href="register.html">Cadet Registration</a></li>
+            <li><a href="participant.html">My Portal &amp; QR Pass</a></li>
+            <li><a href="certificate.html">Verify Certificate</a></li>
           </ul>
         </div>
         <div>
-          <p class="footer-title">Unit Contact (Placeholder)</p>
+          <p class="footer-title">Unit Contact</p>
           <ul class="footer-links">
-            <li>Parade Ground, College Campus</li>
-            <li>Email: ncc-unit@college.example</li>
-            <li>Dates and venue TBA</li>
+            <li data-setting="venueText">KPRIET Campus</li>
+            <li>Email: <span data-setting="contactEmail">ncc@kpriet.ac.in</span></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span id="year">2026</span> College NCC Event Demo</span>
-        <span>Event details subject to organiser confirmation</span>
+        <span>© <span id="year">2026</span> <span data-setting="collegeName">KPR Institute of Engineering and Technology</span></span>
+        <span data-setting="datesText">Dates TBA</span>
       </div>
     </div>
   </footer>
